@@ -1,0 +1,2886 @@
+{
+  "fingerprint": {
+    "metric_standard": "hoi-bfm-official-2026-11-11",
+    "eval_commit": "5748ac3489eb",
+    "exported_at": "2026-11-19T23:31:05+08:00",
+    "registry_sha256": "2f84d68221ac241bc9b3c0aec13898d776d0ceb0bbdbaaa8e7abf96e55846236",
+    "dataset_clipset_sha256": {
+      "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
+    },
+    "policy_sha256": {
+      "amp_a_s43_raw": "18895935b0a6bf44c510839b15df59fef0f64696226d115316b69766ddd5f859",
+      "clf_hoi_20261104": "cc83b02fd39cc800330e3c9973de321a2ae2171ed83902d4be20ebac30ccb24a",
+      "hsw_hoi_20261108": "a9b8dbeea985f9b160181b775785a18eb146bde0742f6404e5c9e032854c1447",
+      "scalebfm_oa_s42_raw": "4e9047e7d00f9a9eb7f16ec48ad15c3a332c48da8ddc9cb9e2eec5eab4a8aa98",
+      "zl_v63_prop_20261105": "297865dcdfa502f9b4b1e29cb8dbaa1e88eb2b4a639d45943d710eefb787b0b2",
+      "zl_v92_20261108": "18509f8dfd7cfb0bfe405779760ece1a5b7e2d4912038ea75fa86022b4e460e2"
+    }
+  },
+  "default_dataset": "clean_218",
+  "dataset_order": [
+    "clean_218"
+  ],
+  "policies": {
+    "amp_a_s43_raw": {
+      "id": "amp_a_s43_raw",
+      "label": "amp_a_s43_raw",
+      "group": "HSW Depth",
+      "modality": "深度 + 本体（图内参考 raw_trajectory_v1）",
+      "modality_tag": "depth",
+      "backend": "hsw_depth_onnx",
+      "reference_mode": "raw_trajectory_v1",
+      "sha256": "18895935b0a6bf44c510839b15df59fef0f64696226d115316b69766ddd5f859",
+      "onnx_sha256_match": true,
+      "action_dim": 21,
+      "proprioceptive": false,
+      "notes": "deploy checkout @ fd2f256e; reference_mode=raw_trajectory_v1",
+      "in_current_registry": false
+    },
+    "clf_hoi_20261104": {
+      "id": "clf_hoi_20261104",
+      "label": "clf_hoi_20261104",
+      "group": "CLF Depth",
+      "modality": "缓存深度 + 本体（Final-Student）",
+      "modality_tag": "depth",
+      "backend": "final_student_onnx",
+      "reference_mode": null,
+      "sha256": "cc83b02fd39cc800330e3c9973de321a2ae2171ed83902d4be20ebac30ccb24a",
+      "onnx_sha256_match": null,
+      "action_dim": 21,
+      "proprioceptive": false,
+      "notes": "clf_hoi_20261104 (= distill8h_20261031 final-student); split ONNX; depth+proprio history; base.onnx fallback until the deploy history is ready; companion training branch codex/hoi-training-20261109",
+      "in_current_registry": true
+    },
+    "hsw_hoi_20261108": {
+      "id": "hsw_hoi_20261108",
+      "label": "hsw_hoi_20261108",
+      "group": "HSW RGB",
+      "modality": "RGB + 本体（RGB-Student）",
+      "modality_tag": "rgb",
+      "backend": "rgb_onnx",
+      "reference_mode": null,
+      "sha256": "a9b8dbeea985f9b160181b775785a18eb146bde0742f6404e5c9e032854c1447",
+      "onnx_sha256_match": true,
+      "action_dim": 21,
+      "proprioceptive": false,
+      "notes": "RGB-student ONNX (policy_f1_i6000, ViBe/Roban distillation export_onnx.py); NOT Teacher10301 .pt, NOT v92 depth student; I/O != policy+hoi_student_; contacts from data_hoi _contact_tensordict (hands+feet), twist = fk_helper smooth_avg5(finite_diff), zero HEFT history start, no obs noise / render randomisation (as the F1 eval entry); leftovers in docs/HSW_RGB_ONNX_GAP.md",
+      "in_current_registry": true
+    },
+    "scalebfm_oa_s42_raw": {
+      "id": "scalebfm_oa_s42_raw",
+      "label": "scalebfm_oa_s42_raw",
+      "group": "HSW Depth",
+      "modality": "深度 + 本体（图内参考 raw_trajectory_v1）",
+      "modality_tag": "depth",
+      "backend": "hsw_depth_onnx",
+      "reference_mode": "raw_trajectory_v1",
+      "sha256": "4e9047e7d00f9a9eb7f16ec48ad15c3a332c48da8ddc9cb9e2eec5eab4a8aa98",
+      "onnx_sha256_match": true,
+      "action_dim": 21,
+      "proprioceptive": false,
+      "notes": "deploy checkout @ fd2f256e; reference_mode=raw_trajectory_v1",
+      "in_current_registry": false
+    },
+    "zl_v63_prop_20261105": {
+      "id": "zl_v63_prop_20261105",
+      "label": "zl_v63_prop_20261105",
+      "group": "ZL Proprio",
+      "modality": "纯本体（Proprioceptive）",
+      "modality_tag": "proprio",
+      "backend": "onnx_l0",
+      "reference_mode": null,
+      "sha256": "297865dcdfa502f9b4b1e29cb8dbaa1e88eb2b4a639d45943d710eefb787b0b2",
+      "onnx_sha256_match": true,
+      "action_dim": 21,
+      "proprioceptive": true,
+      "notes": "normalization inside ONNX; IMU heading aligned at activation; no live object pose",
+      "in_current_registry": true
+    },
+    "zl_v92_20261108": {
+      "id": "zl_v92_20261108",
+      "label": "zl_v92_20261108",
+      "group": "ZL Depth",
+      "modality": "深度 + 本体（循环隐状态）",
+      "modality_tag": "depth",
+      "backend": "depth_onnx",
+      "reference_mode": null,
+      "sha256": "18509f8dfd7cfb0bfe405779760ece1a5b7e2d4912038ea75fa86022b4e460e2",
+      "onnx_sha256_match": true,
+      "action_dim": 21,
+      "proprioceptive": false,
+      "notes": "ONNX export of the same v92 depth+proprio student (checkpoint sha256 54a6b0f3d57ae5a73a42676facd4fc818bd8aa630e0de1f627cdc91ecf0fb1dd); recurrent h_out feedback; v63 controller supplies PD/HEFT layout; deploy optical rays (focal 2.12, apertures 4.24x2.448), hit clamp [0.17,2.5], pinned sim noise 0.01 m / disparity 0.5 px (fB 10.3), 3x3 blur; docs/V92_DEPTH_ONNX_GAP.md",
+      "in_current_registry": true
+    }
+  },
+  "datasets": {
+    "clean_218": {
+      "id": "clean_218",
+      "name": "HOI-BFM 干净子集（218 条）",
+      "short_name": "干净子集（218 条）",
+      "date": "2026-11-19",
+      "metric_standard": "hoi-bfm-official-2026-11-11",
+      "clip_count": 218,
+      "denominator_default": "played",
+      "denominator_note": "基于 847 扩展集严筛（剔除中/重度初始站姿偏离 A_broad、地面单手拉拽 B_broad、trashcan 手部抓取段、首帧穿模 >3 cm 与无接触标注）；六策略全量 218 条均完成站立门控并闭环重评。",
+      "sim_config": "1 ms 物理步长 · engage=reset · data_hoi 手脚参考接触标注 · 官方标准 hoi-bfm-official-2026-11-11",
+      "source_dir": "experiments/clean-218-20261119",
+      "clipset_sha256": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798",
+      "packages": {
+        "hug_v2": 3,
+        "omomo_12_objects": 214,
+        "push_v2": 1
+      },
+      "objects": {
+        "largebox": {
+          "total": 27,
+          "hand": 19,
+          "foot": 8
+        },
+        "smallbox": {
+          "total": 5,
+          "hand": 3,
+          "foot": 2
+        },
+        "floorlamp": {
+          "total": 9,
+          "hand": 0,
+          "foot": 9
+        },
+        "trashcan": {
+          "total": 33,
+          "hand": 0,
+          "foot": 33
+        },
+        "plasticbox": {
+          "total": 19,
+          "hand": 4,
+          "foot": 15
+        },
+        "smalltable": {
+          "total": 19,
+          "hand": 5,
+          "foot": 14
+        },
+        "woodchair": {
+          "total": 30,
+          "hand": 9,
+          "foot": 21
+        },
+        "whitechair": {
+          "total": 21,
+          "hand": 7,
+          "foot": 14
+        },
+        "suitcase": {
+          "total": 32,
+          "hand": 21,
+          "foot": 11
+        },
+        "largetable": {
+          "total": 23,
+          "hand": 11,
+          "foot": 12
+        }
+      },
+      "interaction_counts": {
+        "hand_all": 79,
+        "hand_lift": 34,
+        "hand_ground": 45,
+        "foot_only": 139
+      },
+      "has_interaction_buckets": true,
+      "leaderboard": [
+        {
+          "policy_id": "amp_a_s43_raw",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 204,
+          "sr": 0.9357798165137615,
+          "wilson95": [
+            0.8951031233598469,
+            0.9613638332434234
+          ],
+          "mean_quality_success": 70.98994076960784,
+          "total_score": 66.43095374770643,
+          "fail_reasons_multilabel": {
+            "root_ori": 1,
+            "incomplete": 6,
+            "drop": 5,
+            "contact_recall": 10
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 66,
+              "sr": 0.8354430379746836,
+              "total_score": 66.7491508607595,
+              "mean_quality_success": 79.89671087878789
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 29,
+              "sr": 0.8529411764705882,
+              "total_score": 67.57289970588236,
+              "mean_quality_success": 79.22339965517241
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 37,
+              "sr": 0.8222222222222222,
+              "total_score": 66.12676284444444,
+              "mean_quality_success": 80.42444129729729
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 138,
+              "sr": 0.9928057553956835,
+              "total_score": 66.25010790647481,
+              "mean_quality_success": 66.73018115217391
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "root_ori": 1,
+                "incomplete": 1
+              },
+              "n": 9,
+              "successes": 8,
+              "sr": 0.8888888888888888,
+              "wilson95": [
+                0.5649937852319399,
+                0.9801096286728695
+              ],
+              "mean_quality_success": 0.419305125,
+              "total_score": 0.37271566666666667,
+              "fail_reason_counts": {
+                "root_ori": 1
+              }
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 27,
+              "successes": 26,
+              "sr": 0.9629629629629629,
+              "wilson95": [
+                0.8171614606584348,
+                0.9934320234669025
+              ],
+              "mean_quality_success": 71.68647223076923,
+              "total_score": 69.0314177037037,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 2
+              },
+              "n": 23,
+              "successes": 21,
+              "sr": 0.9130434782608695,
+              "wilson95": [
+                0.7320359570190598,
+                0.9758205045927666
+              ],
+              "mean_quality_success": 81.627406,
+              "total_score": 74.52937069565218,
+              "fail_reason_counts": {
+                "contact_recall": 2
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 18,
+              "sr": 0.9473684210526315,
+              "wilson95": [
+                0.7536078466345479,
+                0.99064824750947
+              ],
+              "mean_quality_success": 78.47142294444444,
+              "total_score": 74.34134805263159,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 2
+              },
+              "n": 5,
+              "successes": 3,
+              "sr": 0.6,
+              "wilson95": [
+                0.23071993220883708,
+                0.8823817688407467
+              ],
+              "mean_quality_success": 95.845528,
+              "total_score": 57.5073168,
+              "fail_reason_counts": {
+                "drop": 2
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 1
+              },
+              "n": 19,
+              "successes": 18,
+              "sr": 0.9473684210526315,
+              "wilson95": [
+                0.7536078466345479,
+                0.99064824750947
+              ],
+              "mean_quality_success": 70.6491085,
+              "total_score": 66.93073436842106,
+              "fail_reason_counts": {
+                "contact_recall": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 32,
+              "successes": 32,
+              "sr": 1.0,
+              "wilson95": [
+                0.8928172849426366,
+                1.0
+              ],
+              "mean_quality_success": 79.242923625,
+              "total_score": 79.242923625,
+              "fail_reason_counts": {}
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 66.26479451515151,
+              "total_score": 66.26479451515151,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 1
+              },
+              "n": 21,
+              "successes": 20,
+              "sr": 0.9523809523809523,
+              "wilson95": [
+                0.7733018341376452,
+                0.9915442305280766
+              ],
+              "mean_quality_success": 74.19057425,
+              "total_score": 70.65768976190476,
+              "fail_reason_counts": {
+                "contact_recall": 1
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1,
+                "contact_recall": 4
+              },
+              "n": 30,
+              "successes": 25,
+              "sr": 0.8333333333333334,
+              "wilson95": [
+                0.6643529481431982,
+                0.9266356575964831
+              ],
+              "mean_quality_success": 68.90161048,
+              "total_score": 57.41800873333333,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 18,
+              "sr": 0.9473684210526315,
+              "wilson95": [
+                0.7536078466345479,
+                0.99064824750947
+              ],
+              "mean_quality_success": 74.95581772222222,
+              "total_score": 71.01077468421053,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 2
+              },
+              "n": 11,
+              "successes": 9,
+              "sr": 0.8181818181818182,
+              "wilson95": [
+                0.5230138624217553,
+                0.9486333993289995
+              ],
+              "mean_quality_success": 92.94615722222223,
+              "total_score": 76.04685590909092,
+              "fail_reason_counts": {
+                "contact_recall": 2
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 4,
+              "successes": 3,
+              "sr": 0.75,
+              "wilson95": [
+                0.3006360524426366,
+                0.9544139373553637
+              ],
+              "mean_quality_success": 88.20273566666667,
+              "total_score": 66.15205175,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 2
+              },
+              "n": 3,
+              "successes": 1,
+              "sr": 0.3333333333333333,
+              "wilson95": [
+                0.0614903152761605,
+                0.7923450448735121
+              ],
+              "mean_quality_success": 100.0,
+              "total_score": 33.333333333333336,
+              "fail_reason_counts": {
+                "drop": 2
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 1
+              },
+              "n": 5,
+              "successes": 4,
+              "sr": 0.8,
+              "wilson95": [
+                0.3755282641185388,
+                0.9637768390302125
+              ],
+              "mean_quality_success": 74.569893,
+              "total_score": 59.65591439999999,
+              "fail_reason_counts": {
+                "contact_recall": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 21,
+              "successes": 21,
+              "sr": 1.0,
+              "wilson95": [
+                0.8453561767357979,
+                0.9999999999999999
+              ],
+              "mean_quality_success": 80.60407180952382,
+              "total_score": 80.60407180952382,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 1
+              },
+              "n": 7,
+              "successes": 6,
+              "sr": 0.8571428571428571,
+              "wilson95": [
+                0.48686549668097007,
+                0.9743210440510253
+              ],
+              "mean_quality_success": 74.54361816666666,
+              "total_score": 63.89452985714286,
+              "fail_reason_counts": {
+                "contact_recall": 1
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1,
+                "contact_recall": 4
+              },
+              "n": 9,
+              "successes": 4,
+              "sr": 0.4444444444444444,
+              "wilson95": [
+                0.188775429471914,
+                0.7333526542559703
+              ],
+              "mean_quality_success": 71.156947,
+              "total_score": 31.62530977777778,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            }
+          }
+        },
+        {
+          "policy_id": "scalebfm_oa_s42_raw",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 155,
+          "sr": 0.7110091743119266,
+          "wilson95": [
+            0.6475928292075651,
+            0.7671174866213867
+          ],
+          "mean_quality_success": 75.83327921935484,
+          "total_score": 53.91815724311926,
+          "fail_reasons_multilabel": {
+            "drop": 22,
+            "incomplete": 24,
+            "contact_recall": 52,
+            "body_z": 2
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 18,
+              "sr": 0.22784810126582278,
+              "total_score": 18.90082948101266,
+              "mean_quality_success": 82.9536405
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 12,
+              "sr": 0.35294117647058826,
+              "total_score": 28.737133529411764,
+              "mean_quality_success": 81.42187833333334
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 6,
+              "sr": 0.13333333333333333,
+              "total_score": 11.468955311111111,
+              "mean_quality_success": 86.01716483333333
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 137,
+              "sr": 0.9856115107913669,
+              "total_score": 73.8200917266187,
+              "mean_quality_success": 74.89775729927007
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "body_z": 2,
+                "incomplete": 2
+              },
+              "n": 9,
+              "successes": 7,
+              "sr": 0.7777777777777778,
+              "wilson95": [
+                0.4525833436728054,
+                0.9367762376877727
+              ],
+              "mean_quality_success": 27.30371214285714,
+              "total_score": 21.236220555555555,
+              "fail_reason_counts": {
+                "body_z": 2
+              }
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 10,
+                "incomplete": 10,
+                "contact_recall": 7
+              },
+              "n": 27,
+              "successes": 14,
+              "sr": 0.5185185185185185,
+              "wilson95": [
+                0.3398532458621043,
+                0.6925704935029092
+              ],
+              "mean_quality_success": 69.77779085714285,
+              "total_score": 36.181076740740735,
+              "fail_reason_counts": {
+                "drop": 10,
+                "contact_recall": 3
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 9
+              },
+              "n": 23,
+              "successes": 14,
+              "sr": 0.6086956521739131,
+              "wilson95": [
+                0.4078517960374599,
+                0.7784262201761787
+              ],
+              "mean_quality_success": 92.0262295,
+              "total_score": 56.015965782608696,
+              "fail_reason_counts": {
+                "contact_recall": 9
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1,
+                "contact_recall": 1
+              },
+              "n": 19,
+              "successes": 18,
+              "sr": 0.9473684210526315,
+              "wilson95": [
+                0.7536078466345479,
+                0.99064824750947
+              ],
+              "mean_quality_success": 85.00405,
+              "total_score": 80.53015263157896,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 5,
+              "successes": 2,
+              "sr": 0.4,
+              "wilson95": [
+                0.1176182311592533,
+                0.769280067791163
+              ],
+              "mean_quality_success": 81.6871425,
+              "total_score": 32.674856999999996,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 14,
+              "sr": 0.7368421052631579,
+              "wilson95": [
+                0.5120803155892935,
+                0.8819376166045982
+              ],
+              "mean_quality_success": 86.9707185,
+              "total_score": 64.08368731578948,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 16
+              },
+              "n": 32,
+              "successes": 14,
+              "sr": 0.4375,
+              "wilson95": [
+                0.2816508596944317,
+                0.6067469796877387
+              ],
+              "mean_quality_success": 75.3092997142857,
+              "total_score": 32.947818625,
+              "fail_reason_counts": {
+                "contact_recall": 15,
+                "drop": 3
+              }
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 63.698843060606066,
+              "total_score": 63.698843060606066,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 6
+              },
+              "n": 21,
+              "successes": 15,
+              "sr": 0.7142857142857143,
+              "wilson95": [
+                0.500432261771624,
+                0.8618632425437179
+              ],
+              "mean_quality_success": 82.8426256,
+              "total_score": 59.173304,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 30,
+              "successes": 24,
+              "sr": 0.8,
+              "wilson95": [
+                0.6269395261897256,
+                0.9049502189759876
+              ],
+              "mean_quality_success": 82.82114016666667,
+              "total_score": 66.25691213333333,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 1
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 10,
+                "incomplete": 10,
+                "contact_recall": 7
+              },
+              "n": 19,
+              "successes": 6,
+              "sr": 0.3157894736842105,
+              "wilson95": [
+                0.15364171004428598,
+                0.5398998982493537
+              ],
+              "mean_quality_success": 77.63154949999999,
+              "total_score": 24.515226157894734,
+              "fail_reason_counts": {
+                "drop": 10,
+                "contact_recall": 3
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 9
+              },
+              "n": 11,
+              "successes": 2,
+              "sr": 0.18181818181818182,
+              "wilson95": [
+                0.05136660067100063,
+                0.4769861375782448
+              ],
+              "mean_quality_success": 98.5632745,
+              "total_score": 17.920595363636366,
+              "fail_reason_counts": {
+                "contact_recall": 9
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 1,
+                "incomplete": 1,
+                "contact_recall": 1
+              },
+              "n": 4,
+              "successes": 3,
+              "sr": 0.75,
+              "wilson95": [
+                0.3006360524426366,
+                0.9544139373553637
+              ],
+              "mean_quality_success": 91.322568,
+              "total_score": 68.491926,
+              "fail_reason_counts": {
+                "drop": 1
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 3,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.5615060804490177
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 5,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.43449149475208104
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 16
+              },
+              "n": 21,
+              "successes": 3,
+              "sr": 0.14285714285714285,
+              "wilson95": [
+                0.04980921798213492,
+                0.346364941492295
+              ],
+              "mean_quality_success": 90.403599,
+              "total_score": 12.914799857142858,
+              "fail_reason_counts": {
+                "contact_recall": 15,
+                "drop": 3
+              }
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 6
+              },
+              "n": 7,
+              "successes": 1,
+              "sr": 0.14285714285714285,
+              "wilson95": [
+                0.02567895594897479,
+                0.51313450331903
+              ],
+              "mean_quality_success": 72.373154,
+              "total_score": 10.339022,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 9,
+              "successes": 3,
+              "sr": 0.3333333333333333,
+              "wilson95": [
+                0.12058159868274293,
+                0.6458026525009102
+              ],
+              "mean_quality_success": 70.89934266666667,
+              "total_score": 23.633114222222225,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 1
+              }
+            }
+          }
+        },
+        {
+          "policy_id": "zl_v92_20261108",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 159,
+          "sr": 0.7293577981651376,
+          "wilson95": [
+            0.6667853884579521,
+            0.7839866939648216
+          ],
+          "mean_quality_success": 72.08554925786164,
+          "total_score": 52.576157486238536,
+          "fail_reasons_multilabel": {
+            "drop": 18,
+            "incomplete": 20,
+            "contact_recall": 55,
+            "body_z": 2
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 22,
+              "sr": 0.27848101265822783,
+              "total_score": 23.32079493670886,
+              "mean_quality_success": 83.74285454545455
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 16,
+              "sr": 0.47058823529411764,
+              "total_score": 40.04839155882353,
+              "mean_quality_success": 85.1028320625
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 6,
+              "sr": 0.13333333333333333,
+              "total_score": 10.682166377777778,
+              "mean_quality_success": 80.11624783333333
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 137,
+              "sr": 0.9856115107913669,
+              "total_score": 69.20330598561151,
+              "mean_quality_success": 70.21357322627738
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 9,
+              "successes": 9,
+              "sr": 1.0,
+              "wilson95": [
+                0.7008472464490407,
+                1.0
+              ],
+              "mean_quality_success": 18.373918777777778,
+              "total_score": 18.373918777777778,
+              "fail_reason_counts": {}
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 6,
+                "incomplete": 6,
+                "contact_recall": 8
+              },
+              "n": 27,
+              "successes": 19,
+              "sr": 0.7037037037037037,
+              "wilson95": [
+                0.515189666191624,
+                0.8414714668235244
+              ],
+              "mean_quality_success": 79.03110378947368,
+              "total_score": 55.614480444444446,
+              "fail_reason_counts": {
+                "drop": 6,
+                "contact_recall": 2
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "body_z": 2,
+                "incomplete": 3,
+                "contact_recall": 11,
+                "drop": 1
+              },
+              "n": 23,
+              "successes": 10,
+              "sr": 0.43478260869565216,
+              "wilson95": [
+                0.25634368332198654,
+                0.6318895069498304
+              ],
+              "mean_quality_success": 74.3507811,
+              "total_score": 32.326426565217396,
+              "fail_reason_counts": {
+                "contact_recall": 10,
+                "body_z": 2,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 19,
+              "successes": 16,
+              "sr": 0.8421052631578947,
+              "wilson95": [
+                0.6243407235682331,
+                0.9447962896007217
+              ],
+              "mean_quality_success": 80.66069387499999,
+              "total_score": 67.92479484210526,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 2
+              },
+              "n": 5,
+              "successes": 3,
+              "sr": 0.6,
+              "wilson95": [
+                0.23071993220883708,
+                0.8823817688407467
+              ],
+              "mean_quality_success": 63.07476866666667,
+              "total_score": 37.844861200000004,
+              "fail_reason_counts": {
+                "drop": 2
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 14,
+              "sr": 0.7368421052631579,
+              "wilson95": [
+                0.5120803155892935,
+                0.8819376166045982
+              ],
+              "mean_quality_success": 68.3603377142857,
+              "total_score": 50.370775157894734,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 17
+              },
+              "n": 32,
+              "successes": 15,
+              "sr": 0.46875,
+              "wilson95": [
+                0.30869129901682335,
+                0.6355076206742619
+              ],
+              "mean_quality_success": 70.7463844,
+              "total_score": 33.1623676875,
+              "fail_reason_counts": {
+                "contact_recall": 15,
+                "drop": 2
+              }
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 83.33353218181819,
+              "total_score": 83.33353218181819,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 4
+              },
+              "n": 21,
+              "successes": 16,
+              "sr": 0.7619047619047619,
+              "wilson95": [
+                0.5490841802765406,
+                0.8937214361088773
+              ],
+              "mean_quality_success": 74.9320479375,
+              "total_score": 57.09108414285714,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 2
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 30,
+              "successes": 24,
+              "sr": 0.8,
+              "wilson95": [
+                0.6269395261897256,
+                0.9049502189759876
+              ],
+              "mean_quality_success": 66.840960375,
+              "total_score": 53.4727683,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 1
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 6,
+                "incomplete": 6,
+                "contact_recall": 8
+              },
+              "n": 19,
+              "successes": 11,
+              "sr": 0.5789473684210527,
+              "wilson95": [
+                0.36275551465160105,
+                0.7685837960796962
+              ],
+              "mean_quality_success": 89.41256290909091,
+              "total_score": 51.765167999999996,
+              "fail_reason_counts": {
+                "drop": 6,
+                "contact_recall": 2
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 11,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 11,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                2.7755575615628914e-17,
+                0.2588400172488141
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 10,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 4,
+              "successes": 1,
+              "sr": 0.25,
+              "wilson95": [
+                0.045586062644636216,
+                0.6993639475573634
+              ],
+              "mean_quality_success": 96.010221,
+              "total_score": 24.00255525,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 2
+              },
+              "n": 3,
+              "successes": 1,
+              "sr": 0.3333333333333333,
+              "wilson95": [
+                0.0614903152761605,
+                0.7923450448735121
+              ],
+              "mean_quality_success": 70.321636,
+              "total_score": 23.440545333333333,
+              "fail_reason_counts": {
+                "drop": 2
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 5,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.43449149475208104
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 17
+              },
+              "n": 21,
+              "successes": 4,
+              "sr": 0.19047619047619047,
+              "wilson95": [
+                0.07667440615177301,
+                0.40000986539273287
+              ],
+              "mean_quality_success": 87.322176,
+              "total_score": 16.632795428571427,
+              "fail_reason_counts": {
+                "contact_recall": 15,
+                "drop": 2
+              }
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 4
+              },
+              "n": 7,
+              "successes": 2,
+              "sr": 0.2857142857142857,
+              "wilson95": [
+                0.0822171657090155,
+                0.6410709098517873
+              ],
+              "mean_quality_success": 76.043019,
+              "total_score": 21.726576857142856,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 2
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 9,
+              "successes": 3,
+              "sr": 0.3333333333333333,
+              "wilson95": [
+                0.12058159868274293,
+                0.6458026525009102
+              ],
+              "mean_quality_success": 63.69933633333333,
+              "total_score": 21.23311211111111,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 1
+              }
+            }
+          }
+        },
+        {
+          "policy_id": "clf_hoi_20261104",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 150,
+          "sr": 0.6880733944954128,
+          "wilson95": [
+            0.6237649608184047,
+            0.7458681467682698
+          ],
+          "mean_quality_success": 64.19178711333333,
+          "total_score": 44.168660857798166,
+          "fail_reasons_multilabel": {
+            "drop": 29,
+            "incomplete": 30,
+            "contact_recall": 63,
+            "body_z": 1
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 11,
+              "sr": 0.13924050632911392,
+              "total_score": 9.370461721518987,
+              "mean_quality_success": 67.29695236363636
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 4,
+              "sr": 0.11764705882352941,
+              "total_score": 8.765664000000001,
+              "mean_quality_success": 74.508144
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 7,
+              "sr": 0.15555555555555556,
+              "total_score": 9.82742,
+              "mean_quality_success": 63.17627142857143
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 139,
+              "sr": 1.0,
+              "total_score": 63.946054611510796,
+              "mean_quality_success": 63.946054611510796
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 9,
+              "successes": 9,
+              "sr": 1.0,
+              "wilson95": [
+                0.7008472464490407,
+                1.0
+              ],
+              "mean_quality_success": 66.89786333333333,
+              "total_score": 66.89786333333333,
+              "fail_reason_counts": {}
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 12,
+                "incomplete": 13,
+                "contact_recall": 14,
+                "body_z": 1
+              },
+              "n": 27,
+              "successes": 11,
+              "sr": 0.4074074074074074,
+              "wilson95": [
+                0.24514513372857344,
+                0.5927361694463591
+              ],
+              "mean_quality_success": 60.71977536363636,
+              "total_score": 24.737686259259256,
+              "fail_reason_counts": {
+                "drop": 12,
+                "contact_recall": 3,
+                "body_z": 1
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 9,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 23,
+              "successes": 14,
+              "sr": 0.6086956521739131,
+              "wilson95": [
+                0.4078517960374599,
+                0.7784262201761787
+              ],
+              "mean_quality_success": 65.19143428571428,
+              "total_score": 39.68174260869565,
+              "fail_reason_counts": {
+                "contact_recall": 8,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 4
+              },
+              "n": 19,
+              "successes": 15,
+              "sr": 0.7894736842105263,
+              "wilson95": [
+                0.5666528575973392,
+                0.9149246150840843
+              ],
+              "mean_quality_success": 69.3291114,
+              "total_score": 54.733509,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 5,
+              "successes": 2,
+              "sr": 0.4,
+              "wilson95": [
+                0.1176182311592533,
+                0.769280067791163
+              ],
+              "mean_quality_success": 72.32436100000001,
+              "total_score": 28.929744400000004,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 14,
+              "sr": 0.7368421052631579,
+              "wilson95": [
+                0.5120803155892935,
+                0.8819376166045982
+              ],
+              "mean_quality_success": 65.08872857142858,
+              "total_score": 47.96011578947368,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 20
+              },
+              "n": 32,
+              "successes": 11,
+              "sr": 0.34375,
+              "wilson95": [
+                0.20410233354328552,
+                0.5168922649121406
+              ],
+              "mean_quality_success": 41.10807190909091,
+              "total_score": 14.13089971875,
+              "fail_reason_counts": {
+                "contact_recall": 16,
+                "drop": 5
+              }
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 75.01507918181818,
+              "total_score": 75.01507918181818,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 1
+              },
+              "n": 21,
+              "successes": 18,
+              "sr": 0.8571428571428571,
+              "wilson95": [
+                0.6536350585077049,
+                0.950190782017865
+              ],
+              "mean_quality_success": 56.98247794444444,
+              "total_score": 48.84212395238095,
+              "fail_reason_counts": {
+                "drop": 2,
+                "contact_recall": 1
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 7,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 30,
+              "successes": 23,
+              "sr": 0.7666666666666667,
+              "wilson95": [
+                0.5907132766967574,
+                0.8820776078949878
+              ],
+              "mean_quality_success": 60.734395130434784,
+              "total_score": 46.56303626666667,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 1
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 12,
+                "incomplete": 13,
+                "contact_recall": 14,
+                "body_z": 1
+              },
+              "n": 19,
+              "successes": 3,
+              "sr": 0.15789473684210525,
+              "wilson95": [
+                0.055203710399278266,
+                0.3756592764317668
+              ],
+              "mean_quality_success": 72.85276499999999,
+              "total_score": 11.503068157894736,
+              "fail_reason_counts": {
+                "drop": 12,
+                "contact_recall": 3,
+                "body_z": 1
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 9,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 11,
+              "successes": 2,
+              "sr": 0.18181818181818182,
+              "wilson95": [
+                0.05136660067100063,
+                0.4769861375782448
+              ],
+              "mean_quality_success": 61.107045,
+              "total_score": 11.110371818181818,
+              "fail_reason_counts": {
+                "contact_recall": 8,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 4
+              },
+              "n": 4,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.48990002040399916
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 3,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.5615060804490177
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 5,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.43449149475208104
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 20
+              },
+              "n": 21,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.15464382326420195
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 16,
+                "drop": 5
+              }
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 1
+              },
+              "n": 7,
+              "successes": 4,
+              "sr": 0.5714285714285714,
+              "wilson95": [
+                0.2504542304090258,
+                0.8417830777373732
+              ],
+              "mean_quality_success": 69.23308825,
+              "total_score": 39.56176471428571,
+              "fail_reason_counts": {
+                "drop": 2,
+                "contact_recall": 1
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 7,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 9,
+              "successes": 2,
+              "sr": 0.2222222222222222,
+              "wilson95": [
+                0.06322376231222723,
+                0.5474166563271946
+              ],
+              "mean_quality_success": 61.280868999999996,
+              "total_score": 13.617970888888888,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 1
+              }
+            }
+          }
+        },
+        {
+          "policy_id": "hsw_hoi_20261108",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 146,
+          "sr": 0.6697247706422018,
+          "wilson95": [
+            0.6048258828021563,
+            0.7287454581906961
+          ],
+          "mean_quality_success": 59.67067458219178,
+          "total_score": 39.962928848623854,
+          "fail_reasons_multilabel": {
+            "drop": 33,
+            "incomplete": 33,
+            "contact_recall": 67
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 7,
+              "sr": 0.08860759493670886,
+              "total_score": 7.138622189873417,
+              "mean_quality_success": 80.56445042857142
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 1,
+              "sr": 0.029411764705882353,
+              "total_score": 2.0588235294117645,
+              "mean_quality_success": 70.0
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 6,
+              "sr": 0.13333333333333333,
+              "total_score": 10.976692288888888,
+              "mean_quality_success": 82.32519216666667
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 139,
+              "sr": 1.0,
+              "total_score": 58.618470043165466,
+              "mean_quality_success": 58.618470043165466
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 9,
+              "successes": 9,
+              "sr": 1.0,
+              "wilson95": [
+                0.7008472464490407,
+                1.0
+              ],
+              "mean_quality_success": 38.662768444444445,
+              "total_score": 38.662768444444445,
+              "fail_reason_counts": {}
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 14,
+                "incomplete": 14,
+                "contact_recall": 13
+              },
+              "n": 27,
+              "successes": 9,
+              "sr": 0.3333333333333333,
+              "wilson95": [
+                0.1864305444359335,
+                0.5217558012789452
+              ],
+              "mean_quality_success": 54.230395666666666,
+              "total_score": 18.076798555555555,
+              "fail_reason_counts": {
+                "drop": 14,
+                "contact_recall": 4
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 7,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 23,
+              "successes": 16,
+              "sr": 0.6956521739130435,
+              "wilson95": [
+                0.49133870939427393,
+                0.8439617197902755
+              ],
+              "mean_quality_success": 70.0657799375,
+              "total_score": 48.74141213043478,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 4
+              },
+              "n": 19,
+              "successes": 15,
+              "sr": 0.7894736842105263,
+              "wilson95": [
+                0.5666528575973392,
+                0.9149246150840843
+              ],
+              "mean_quality_success": 58.614387533333336,
+              "total_score": 46.27451647368421,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 5,
+              "successes": 2,
+              "sr": 0.4,
+              "wilson95": [
+                0.1176182311592533,
+                0.769280067791163
+              ],
+              "mean_quality_success": 70.3873165,
+              "total_score": 28.1549266,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 14,
+              "sr": 0.7368421052631579,
+              "wilson95": [
+                0.5120803155892935,
+                0.8819376166045982
+              ],
+              "mean_quality_success": 64.51929607142857,
+              "total_score": 47.54053394736842,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 21
+              },
+              "n": 32,
+              "successes": 11,
+              "sr": 0.34375,
+              "wilson95": [
+                0.20410233354328552,
+                0.5168922649121406
+              ],
+              "mean_quality_success": 48.60747427272727,
+              "total_score": 16.70881928125,
+              "fail_reason_counts": {
+                "contact_recall": 16,
+                "drop": 5
+              }
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 63.78040978787878,
+              "total_score": 63.78040978787878,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 6
+              },
+              "n": 21,
+              "successes": 15,
+              "sr": 0.7142857142857143,
+              "wilson95": [
+                0.500432261771624,
+                0.8618632425437179
+              ],
+              "mean_quality_success": 55.24495733333333,
+              "total_score": 39.46068380952381,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 8
+              },
+              "n": 30,
+              "successes": 22,
+              "sr": 0.7333333333333333,
+              "wilson95": [
+                0.5555169795568831,
+                0.8581750444608938
+              ],
+              "mean_quality_success": 61.975311000000005,
+              "total_score": 45.4485614,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 2
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 14,
+                "incomplete": 14,
+                "contact_recall": 13
+              },
+              "n": 19,
+              "successes": 1,
+              "sr": 0.05263157894736842,
+              "wilson95": [
+                0.009351752490529969,
+                0.2463921533654521
+              ],
+              "mean_quality_success": 70.0,
+              "total_score": 3.6842105263157894,
+              "fail_reason_counts": {
+                "drop": 14,
+                "contact_recall": 4
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 7,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 11,
+              "successes": 4,
+              "sr": 0.36363636363636365,
+              "wilson95": [
+                0.15166223614131383,
+                0.6462032231083628
+              ],
+              "mean_quality_success": 90.34357875,
+              "total_score": 32.85221045454546,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 4
+              },
+              "n": 4,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.48990002040399916
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 3,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.5615060804490177
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 5,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.43449149475208104
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 21
+              },
+              "n": 21,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.15464382326420195
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 16,
+                "drop": 5
+              }
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 6
+              },
+              "n": 7,
+              "successes": 1,
+              "sr": 0.14285714285714285,
+              "wilson95": [
+                0.02567895594897479,
+                0.51313450331903
+              ],
+              "mean_quality_success": 57.940702,
+              "total_score": 8.277243142857143,
+              "fail_reason_counts": {
+                "contact_recall": 3,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 8
+              },
+              "n": 9,
+              "successes": 1,
+              "sr": 0.1111111111111111,
+              "wilson95": [
+                0.019890371327130535,
+                0.4350062147680601
+              ],
+              "mean_quality_success": 74.636136,
+              "total_score": 8.292904,
+              "fail_reason_counts": {
+                "contact_recall": 6,
+                "drop": 2
+              }
+            }
+          }
+        },
+        {
+          "policy_id": "zl_v63_prop_20261105",
+          "n": 218,
+          "attempted": 218,
+          "stand_failed": 0,
+          "successes": 147,
+          "sr": 0.6743119266055045,
+          "wilson95": [
+            0.6095506999813124,
+            0.7330360826599956
+          ],
+          "mean_quality_success": 58.79679691836734,
+          "total_score": 39.64738140825688,
+          "fail_reasons_multilabel": {
+            "drop": 31,
+            "incomplete": 32,
+            "contact_recall": 65,
+            "body_z": 1
+          },
+          "interaction": {
+            "hand_all": {
+              "n": 79,
+              "successes": 9,
+              "sr": 0.11392405063291139,
+              "total_score": 9.54676911392405,
+              "mean_quality_success": 83.79941777777778
+            },
+            "hand_lift": {
+              "n": 34,
+              "successes": 3,
+              "sr": 0.08823529411764706,
+              "total_score": 7.457620911764706,
+              "mean_quality_success": 84.51970366666667
+            },
+            "hand_ground": {
+              "n": 45,
+              "successes": 6,
+              "sr": 0.13333333333333333,
+              "total_score": 11.125236644444444,
+              "mean_quality_success": 83.43927483333333
+            },
+            "foot_only": {
+              "n": 139,
+              "successes": 138,
+              "sr": 0.9928057553956835,
+              "total_score": 56.754923647482016,
+              "mean_quality_success": 57.16619121014493
+            }
+          },
+          "by_object": {
+            "floorlamp": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 9,
+              "successes": 9,
+              "sr": 1.0,
+              "wilson95": [
+                0.7008472464490407,
+                1.0
+              ],
+              "mean_quality_success": 50.718431333333335,
+              "total_score": 50.718431333333335,
+              "fail_reason_counts": {}
+            },
+            "largebox": {
+              "attempted": 27,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 12,
+                "incomplete": 12,
+                "contact_recall": 14
+              },
+              "n": 27,
+              "successes": 13,
+              "sr": 0.48148148148148145,
+              "wilson95": [
+                0.3074295064970908,
+                0.6601467541378958
+              ],
+              "mean_quality_success": 58.92816930769231,
+              "total_score": 28.37282225925926,
+              "fail_reason_counts": {
+                "drop": 12,
+                "contact_recall": 2
+              }
+            },
+            "largetable": {
+              "attempted": 23,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 11,
+                "drop": 1,
+                "incomplete": 2,
+                "body_z": 1
+              },
+              "n": 23,
+              "successes": 11,
+              "sr": 0.4782608695652174,
+              "wilson95": [
+                0.2923686953994572,
+                0.6703757013578151
+              ],
+              "mean_quality_success": 43.633205363636364,
+              "total_score": 20.868054739130436,
+              "fail_reason_counts": {
+                "contact_recall": 10,
+                "body_z": 1,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 3
+              },
+              "n": 19,
+              "successes": 15,
+              "sr": 0.7894736842105263,
+              "wilson95": [
+                0.5666528575973392,
+                0.9149246150840843
+              ],
+              "mean_quality_success": 82.32496533333332,
+              "total_score": 64.99339368421052,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 5,
+              "successes": 2,
+              "sr": 0.4,
+              "wilson95": [
+                0.1176182311592533,
+                0.769280067791163
+              ],
+              "mean_quality_success": 66.436266,
+              "total_score": 26.5745064,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 19,
+              "successes": 14,
+              "sr": 0.7368421052631579,
+              "wilson95": [
+                0.5120803155892935,
+                0.8819376166045982
+              ],
+              "mean_quality_success": 46.15819464285715,
+              "total_score": 34.011301315789474,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 32,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 18
+              },
+              "n": 32,
+              "successes": 13,
+              "sr": 0.40625,
+              "wilson95": [
+                0.255194024803138,
+                0.5774027342701177
+              ],
+              "mean_quality_success": 48.38225192307693,
+              "total_score": 19.65528984375,
+              "fail_reason_counts": {
+                "contact_recall": 14,
+                "drop": 5
+              }
+            },
+            "trashcan": {
+              "attempted": 33,
+              "stand_failed": 0,
+              "fail_reasons": {},
+              "n": 33,
+              "successes": 33,
+              "sr": 1.0,
+              "wilson95": [
+                0.8957265699643882,
+                1.0
+              ],
+              "mean_quality_success": 63.30296693939395,
+              "total_score": 63.30296693939395,
+              "fail_reason_counts": {}
+            },
+            "whitechair": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 5
+              },
+              "n": 21,
+              "successes": 14,
+              "sr": 0.6666666666666666,
+              "wilson95": [
+                0.45373075657210293,
+                0.8280546356731631
+              ],
+              "mean_quality_success": 65.38455,
+              "total_score": 43.5897,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 30,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 6
+              },
+              "n": 30,
+              "successes": 23,
+              "sr": 0.7666666666666667,
+              "wilson95": [
+                0.5907132766967574,
+                0.8820776078949878
+              ],
+              "mean_quality_success": 56.23126886956521,
+              "total_score": 43.11063946666666,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 2
+              }
+            }
+          },
+          "by_object_hand": {
+            "largebox": {
+              "attempted": 19,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 12,
+                "incomplete": 12,
+                "contact_recall": 14
+              },
+              "n": 19,
+              "successes": 5,
+              "sr": 0.2631578947368421,
+              "wilson95": [
+                0.11806238339540162,
+                0.48791968441070643
+              ],
+              "mean_quality_success": 86.8194706,
+              "total_score": 22.847229105263157,
+              "fail_reason_counts": {
+                "drop": 12,
+                "contact_recall": 2
+              }
+            },
+            "largetable": {
+              "attempted": 11,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 11,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 11,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                2.7755575615628914e-17,
+                0.2588400172488141
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 10,
+                "drop": 1
+              }
+            },
+            "plasticbox": {
+              "attempted": 4,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 4,
+                "incomplete": 4,
+                "contact_recall": 3
+              },
+              "n": 4,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.48990002040399916
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 4
+              }
+            },
+            "smallbox": {
+              "attempted": 3,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 3
+              },
+              "n": 3,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.5615060804490177
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "drop": 3
+              }
+            },
+            "smalltable": {
+              "attempted": 5,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "contact_recall": 5,
+                "drop": 1,
+                "incomplete": 1
+              },
+              "n": 5,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.43449149475208104
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 1
+              }
+            },
+            "suitcase": {
+              "attempted": 21,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 5,
+                "incomplete": 5,
+                "contact_recall": 18
+              },
+              "n": 21,
+              "successes": 2,
+              "sr": 0.09523809523809523,
+              "wilson95": [
+                0.026518208796947246,
+                0.2891458386074067
+              ],
+              "mean_quality_success": 73.8389685,
+              "total_score": 7.032282714285714,
+              "fail_reason_counts": {
+                "contact_recall": 14,
+                "drop": 5
+              }
+            },
+            "whitechair": {
+              "attempted": 7,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 3,
+                "incomplete": 3,
+                "contact_recall": 5
+              },
+              "n": 7,
+              "successes": 0,
+              "sr": 0.0,
+              "wilson95": [
+                0.0,
+                0.35433884297520657
+              ],
+              "mean_quality_success": null,
+              "total_score": 0.0,
+              "fail_reason_counts": {
+                "contact_recall": 4,
+                "drop": 3
+              }
+            },
+            "woodchair": {
+              "attempted": 9,
+              "stand_failed": 0,
+              "fail_reasons": {
+                "drop": 2,
+                "incomplete": 2,
+                "contact_recall": 6
+              },
+              "n": 9,
+              "successes": 2,
+              "sr": 0.2222222222222222,
+              "wilson95": [
+                0.06322376231222723,
+                0.5474166563271946
+              ],
+              "mean_quality_success": 86.209735,
+              "total_score": 19.157718888888887,
+              "fail_reason_counts": {
+                "contact_recall": 5,
+                "drop": 2
+              }
+            }
+          }
+        }
+      ],
+      "featured_video": {
+        "title": "amp_a_s43_raw · 6 场景 2×3 精华合集（Ghost 参考叠影）",
+        "policy_id": "amp_a_s43_raw",
+        "video_url": "media/clean_218/hsw_amp_a_s43_raw_6scenes_2x3.mp4",
+        "poster_url": "media/clean_218/preview_grid_mid.png",
+        "size_mb": 2.41
+      },
+      "videos": [
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub10_smallbox_050",
+          "policy_id": "amp_a_s43_raw",
+          "object": "smallbox",
+          "interaction_type": "hand_lift",
+          "success": 1,
+          "episode_score": 100.0,
+          "quality_score": 100.0,
+          "obj_pos_err_mean": 0.129,
+          "contact_recall": 0.7617,
+          "video_url": "media/clean_218/omomo_12_objects__sub10_smallbox_050.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub10_smallbox_050.png",
+          "size_mb": 0.4
+        },
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub15_plasticbox_021",
+          "policy_id": "amp_a_s43_raw",
+          "object": "plasticbox",
+          "interaction_type": "hand_lift",
+          "success": 1,
+          "episode_score": 95.74,
+          "quality_score": 95.74,
+          "obj_pos_err_mean": 0.0896,
+          "contact_recall": 0.8863,
+          "video_url": "media/clean_218/omomo_12_objects__sub15_plasticbox_021.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub15_plasticbox_021.png",
+          "size_mb": 0.4
+        },
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub2_woodchair_000",
+          "policy_id": "amp_a_s43_raw",
+          "object": "woodchair",
+          "interaction_type": "hand_lift",
+          "success": 1,
+          "episode_score": 100.0,
+          "quality_score": 100.0,
+          "obj_pos_err_mean": 0.0921,
+          "contact_recall": 0.9133,
+          "video_url": "media/clean_218/omomo_12_objects__sub2_woodchair_000.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub2_woodchair_000.png",
+          "size_mb": 0.85
+        },
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub3_largetable_004",
+          "policy_id": "amp_a_s43_raw",
+          "object": "largetable",
+          "interaction_type": "hand_lift",
+          "success": 1,
+          "episode_score": 95.05,
+          "quality_score": 95.05,
+          "obj_pos_err_mean": 0.1047,
+          "contact_recall": 0.9277,
+          "video_url": "media/clean_218/omomo_12_objects__sub3_largetable_004.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub3_largetable_004.png",
+          "size_mb": 0.67
+        },
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub6_smalltable_011",
+          "policy_id": "amp_a_s43_raw",
+          "object": "smalltable",
+          "interaction_type": "hand_lift",
+          "success": 1,
+          "episode_score": 100.0,
+          "quality_score": 100.0,
+          "obj_pos_err_mean": 0.0679,
+          "contact_recall": 0.929,
+          "video_url": "media/clean_218/omomo_12_objects__sub6_smalltable_011.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub6_smalltable_011.png",
+          "size_mb": 0.61
+        },
+        {
+          "dataset_id": "clean_218",
+          "clip": "omomo_12_objects__sub8_suitcase_003",
+          "policy_id": "amp_a_s43_raw",
+          "object": "suitcase",
+          "interaction_type": "hand_ground",
+          "success": 1,
+          "episode_score": 100.0,
+          "quality_score": 100.0,
+          "obj_pos_err_mean": 0.1043,
+          "contact_recall": 0.9541,
+          "video_url": "media/clean_218/omomo_12_objects__sub8_suitcase_003.mp4",
+          "poster_url": "media/clean_218/omomo_12_objects__sub8_suitcase_003.png",
+          "size_mb": 0.61
+        }
+      ]
+    }
+  },
+  "metric_spec": {
+    "standard": "hoi-bfm-official-2026-11-11",
+    "thresholds": {
+      "body_z_err": 0.4,
+      "body_z_err_low_ref": 0.75,
+      "body_z_low_ref_root": 0.5,
+      "body_z_steps": 5,
+      "root_ori_err_sq": 2.4674,
+      "root_ori_steps": 5,
+      "contact_ref_on": 0.5,
+      "drop_ref_clearance": 0.08,
+      "drop_z_below_ref": 0.18,
+      "drop_steps": 10,
+      "motion_xy_range": 15.0,
+      "contact_recall_min": 0.5,
+      "score_pos_full": 0.15,
+      "score_pos_zero": 0.5,
+      "score_ori_full": 0.5,
+      "score_ori_zero": 1.5,
+      "score_mean_weight": 0.5,
+      "score_w_pos": 0.7,
+      "score_w_ori": 0.3,
+      "contact_heuristic_z_tol": 0.18,
+      "contact_actual_on": 0.5
+    }
+  }
+}

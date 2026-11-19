@@ -1,0 +1,27 @@
+{
+  "snapshot_version": "20261119-233105",
+  "fingerprint": {
+    "metric_standard": "hoi-bfm-official-2026-11-11",
+    "eval_commit": "5748ac3489eb",
+    "exported_at": "2026-11-19T23:31:05+08:00",
+    "registry_sha256": "2f84d68221ac241bc9b3c0aec13898d776d0ceb0bbdbaaa8e7abf96e55846236",
+    "dataset_clipset_sha256": {
+      "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
+    },
+    "policy_sha256": {
+      "amp_a_s43_raw": "18895935b0a6bf44c510839b15df59fef0f64696226d115316b69766ddd5f859",
+      "clf_hoi_20261104": "cc83b02fd39cc800330e3c9973de321a2ae2171ed83902d4be20ebac30ccb24a",
+      "hsw_hoi_20261108": "a9b8dbeea985f9b160181b775785a18eb146bde0742f6404e5c9e032854c1447",
+      "scalebfm_oa_s42_raw": "4e9047e7d00f9a9eb7f16ec48ad15c3a332c48da8ddc9cb9e2eec5eab4a8aa98",
+      "zl_v63_prop_20261105": "297865dcdfa502f9b4b1e29cb8dbaa1e88eb2b4a639d45943d710eefb787b0b2",
+      "zl_v92_20261108": "18509f8dfd7cfb0bfe405779760ece1a5b7e2d4912038ea75fa86022b4e460e2"
+    }
+  },
+  "datasets": {
+    "clean_218": {
+      "clip_count": 218,
+      "policies": 6,
+      "videos": 7
+    }
+  }
+}

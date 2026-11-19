@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HOI-BFM Benchmark · Leaderboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Clean Top Bar (RoboTwin 2.0 style) -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#setting">
+        <span class="brand-logo">HOI-BFM</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Benchmark Leaderboard</span>
+      </a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="#setting">评测设定</a>
+        <a href="#ranking">策略总榜</a>
+        <a href="#per-object">物体分桶</a>
+        <a href="#failures">失败统计</a>
+        <a href="#clips">片段诊断</a>
+        <a href="#videos">Ghost 回放</a>
+        <button class="copy-btn" id="copy-link-btn" type="button">复制链接</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <!-- Left Sticky Outline (ON THIS PAGE) -->
+    <aside class="sidebar" aria-label="页面目录">
+      <div class="sidebar-title">ON THIS PAGE</div>
+      <ul class="toc" id="toc-list">
+        <li><a href="#setting" class="active">评测设定</a></li>
+        <li><a href="#ranking">策略总榜</a></li>
+        <li><a href="#per-object">物体分桶</a></li>
+        <li><a href="#failures">失败统计</a></li>
+        <li><a href="#clips">片段诊断</a></li>
+        <li><a href="#videos">Ghost 回放</a></li>
+        <li><a href="#repro">策略与指纹</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Single-Column Content -->
+    <main class="content">
+      <!-- 1. Benchmark Setting -->
+      <section id="setting" class="section-card">
+        <h2 class="sec-h2">Benchmark Setting · 评测设定</h2>
+        <p class="setting-desc" id="setting-desc">加载评测配置中…</p>
+
+        <div class="policy-box">
+          <div class="policy-box-title">SCORING &amp; SUCCESS GATE · 官方计分口径（hoi-bfm-official-2026-11-11）</div>
+          <p id="scoring-summary"></p>
+          <details class="inline-details">
+            <summary>展开完整阈值与计分公式</summary>
+            <div id="scoring-details" class="details-body"></div>
+          </details>
+        </div>
+
+        <div class="meta-strip" id="meta-strip"></div>
+      </section>
+
+      <!-- 2. Overall Ranking -->
+      <section id="ranking" class="section-card">
+        <div class="control-bar">
+          <div class="ctrl-group">
+            <span class="ctrl-label">Rank by</span>
+            <div class="chip-row" id="sort-chips">
+              <button class="chip active" data-sort="total_score">总分</button>
+              <button class="chip" data-sort="sr">成功率</button>
+              <button class="chip" data-sort="hand_all">手部有效交互 (79)</button>
+              <button class="chip" data-sort="foot_only">纯脚部交互 (139)</button>
+              <button class="chip" data-sort="quality">成功质量均分</button>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-label">输入模态</span>
+            <div class="chip-row" id="modality-chips">
+              <button class="chip active" data-mod="all">全部</button>
+              <button class="chip" data-mod="depth">Depth</button>
+              <button class="chip" data-mod="rgb">RGB</button>
+              <button class="chip" data-mod="proprio">Proprio</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-line">
+          <span id="rank-count"></span>
+          <span id="rank-sort-hint"></span>
+        </div>
+        <div class="spec-line" id="rank-spec-line"></div>
+
+        <div class="board-head">
+          <h2 class="sec-h2" id="rank-heading">Overall Ranking · 总分</h2>
+          <span class="updated-meta" id="rank-updated"></span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table" id="ranking-table"></table>
+        </div>
+      </section>
+
+      <!-- 3. Per-Object Breakdown -->
+      <section id="per-object" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Per-Object Results · 按物体类别分桶</h2>
+            <p class="sec-sub">行内加粗为该类别最优；点击任意单元格直接下钻对应片段诊断</p>
+          </div>
+          <div class="control-inline">
+            <div class="chip-row" id="obj-scope-chips">
+              <button class="chip active" data-scope="all">全量 (218 条)</button>
+              <button class="chip" data-scope="hand">仅手部交互 (79 条)</button>
+            </div>
+            <div class="chip-row" id="obj-metric-chips">
+              <button class="chip active" data-metric="total_score">总分</button>
+              <button class="chip" data-metric="sr">成功率</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table per-obj-table" id="object-table"></table>
+        </div>
+      </section>
+
+      <!-- 4. Failure Breakdown -->
+      <section id="failures" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Failure Breakdown · 失败原因统计（全 218 条）</h2>
+            <p class="sec-sub">多标签统计（单条失败可同时触发多个原因，不作互斥占比）；点击任意非零数字下钻查看对应片段</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table" id="failure-table"></table>
+        </div>
+      </section>
+
+      <!-- 5. Per-Clip Diagnostics -->
+      <section id="clips" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Per-Clip Diagnostics · 单片段跨策略诊断</h2>
+            <p class="sec-sub">支持按物体、交互类型、策略失败标签及 A/B 策略差异（A 胜 B 负）检索 218 条全量明细</p>
+          </div>
+          <button class="btn-subtle" id="clip-reset-btn" type="button">重置筛选</button>
+        </div>
+
+        <div class="clip-controls">
+          <input type="search" id="clip-search" class="input" placeholder="搜索 clip ID / 物体…" />
+          <select id="clip-object-filter" class="select"></select>
+          <select id="clip-inter-filter" class="select"></select>
+          <select id="clip-policy-filter" class="select"></select>
+          <select id="clip-fail-filter" class="select">
+            <option value="all">全部判定 / 失败原因</option>
+            <option value="failed">仅失败</option>
+            <option value="succeeded">仅成功</option>
+            <option value="drop">含 drop</option>
+            <option value="contact_recall">含 contact_recall</option>
+            <option value="incomplete">含 incomplete</option>
+            <option value="body_z">含 body_z</option>
+            <option value="root_ori">含 root_ori</option>
+          </select>
+        </div>
+
+        <div class="diff-strip">
+          <span class="ctrl-label">A / B Diff</span>
+          <select id="diff-policy-a" class="select select-sm"></select>
+          <select id="diff-mode" class="select select-sm">
+            <option value="off">关闭对比</option>
+            <option value="a_win_b_lose">A 成功 且 B 失败</option>
+            <option value="a_lose_b_win">A 失败 且 B 成功</option>
+            <option value="disagree">判定不同</option>
+          </select>
+          <select id="diff-policy-b" class="select select-sm"></select>
+        </div>
+
+        <div class="clips-grid">
+          <div class="clip-list-box">
+            <div class="clip-list-head" id="clip-count">加载中…</div>
+            <div class="clip-list" id="clip-list" role="listbox"></div>
+          </div>
+          <div class="clip-detail-box" id="clip-detail">
+            <div class="empty-msg">在左侧选择一个片段以查看跨策略诊断明细</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Ghost Replay Videos -->
+      <section id="videos" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Ghost Replays · 代表片段叠影回放</h2>
+            <p class="sec-sub">黄色半透明为参考轨迹与参考物体，实体为闭环 MuJoCo 仿真结果（精选代表片段，非全量覆盖）</p>
+          </div>
+          <div class="chip-row" id="video-filter-chips"></div>
+        </div>
+
+        <div id="videos-featured"></div>
+        <div class="video-grid" id="videos-grid"></div>
+      </section>
+
+      <!-- 7. Policy Registry & Reproducibility -->
+      <section id="repro" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Policies &amp; Snapshot Fingerprint · 策略契约与可复现指纹</h2>
+            <p class="sec-sub">权重不入 Git，所有 SHA256 取自实际闭环运行的 manifest.json</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="rt-table compact-table" id="registry-table"></table>
+        </div>
+        <div class="fp-footer mono" id="fp-footer"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
