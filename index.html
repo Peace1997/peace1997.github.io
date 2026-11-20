@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Humanoid Benchmark — BFM 全身动作跟踪与 HOI-BFM 人机物交互统一评测平台" />
-  <title>Humanoid Benchmark · BFM &amp; HOI-BFM 评测平台</title>
+  <meta name="description" content="BFM BenchMark · Leaderboard 0.1 — 人形机器人 BFM 与 HOI-BFM 评测榜单" />
+  <title>BFM BenchMark · Leaderboard 0.1</title>
   <style>
     :root {
       --bg: #fafafa;
@@ -30,7 +30,6 @@
       letter-spacing: 0.01em;
       -webkit-font-smoothing: antialiased;
     }
-    .mono { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: 12.5px; }
     .topbar {
       background: rgba(255, 255, 255, 0.96);
       border-bottom: 1px solid var(--border);
@@ -74,11 +73,9 @@
     main {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 40px 24px 72px;
+      padding: 48px 24px 72px;
     }
-    .hero {
-      margin-bottom: 28px;
-    }
+    .hero { margin-bottom: 32px; }
     .hero h1 {
       margin: 0 0 8px;
       font-size: 28px;
@@ -89,7 +86,6 @@
       margin: 0;
       color: var(--text-2);
       font-size: 14.5px;
-      max-width: 760px;
     }
 
     .track-grid {
@@ -101,11 +97,11 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px 26px;
+      padding: 26px 28px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 16px;
+      gap: 22px;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .track-card:hover {
@@ -119,11 +115,7 @@
       gap: 10px;
       margin-bottom: 10px;
     }
-    .track-title {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-    }
+    .track-title { margin: 0; font-size: 18px; font-weight: 600; }
     .badge {
       font-size: 11.5px;
       font-weight: 600;
@@ -135,29 +127,15 @@
     .badge-blue { background: var(--accent-bg); color: var(--accent); }
 
     .track-desc {
-      margin: 0 0 14px;
-      color: var(--text-2);
-      font-size: 13.5px;
-    }
-    .kv-list {
       margin: 0;
-      padding: 12px 14px;
-      list-style: none;
-      background: var(--subtle);
-      border-radius: 8px;
-      font-size: 13px;
       color: var(--text-2);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      font-size: 14px;
+      line-height: 1.75;
     }
-    .kv-list strong { color: var(--text); font-weight: 600; }
-
     .track-foot {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding-top: 8px;
+      justify-content: flex-end;
     }
     .btn-primary {
       display: inline-block;
@@ -202,9 +180,9 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="./">
-        <span class="brand-logo">Humanoid Benchmark</span>
+        <span class="brand-logo">BFM BenchMark</span>
         <span class="brand-sep">|</span>
-        <span class="brand-sub">Peace1997</span>
+        <span class="brand-sub">Leaderboard 0.1</span>
       </a>
       <nav class="topnav" aria-label="评测赛道导航">
         <a href="./" class="nav-active">Home</a>
@@ -218,7 +196,7 @@
   <main>
     <div class="hero">
       <h1>人形机器人基础模型统一评测平台</h1>
-      <p>覆盖全身动作跟踪（BFM）与全身人机物交互（HOI-BFM）两大独立赛道。各赛道严格隔离物理协议、仿真步长与计分口径，所有榜单直读离线评测真源输出，可复现、可核验。</p>
+      <p>提供全身动作跟踪（BFM）与全身人机物交互（HOI-BFM）两大独立评测榜单。</p>
     </div>
 
     <div class="track-grid">
@@ -226,17 +204,11 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">BFM 评测 · 全身动作跟踪</h2>
-            <span class="badge badge-blue">Protocol v2 · 接入就绪</span>
+            <span class="badge badge-blue">接入就绪</span>
           </div>
-          <p class="track-desc">在统一 MuJoCo 3.17.0 物理协议下评估人形机器人全身动作跟踪策略，支持独立轨迹复算核验（<code>motionchallenge-verify</code>）。</p>
-          <ul class="kv-list">
-            <li><strong>主排序指标</strong>：XY 平移对齐全程 MPBPE（mm，越低越好）</li>
-            <li><strong>支持机体与套件</strong>：Unitree G1 (29 DoF · LAFAN1 40 条) / Roban S17 (21 DoF)</li>
-            <li><strong>物理协议</strong>：2 ms 步长 · 摩擦 1.0 · 无观测噪声</li>
-          </ul>
+          <p class="track-desc">统一物理协议下的人形机器人全身动作跟踪评测，比较跨机体动作复现精度与稳定性。</p>
         </div>
         <div class="track-foot">
-          <span class="mono" style="color:var(--muted);">bfm-benchmark · Protocol v2</span>
           <a class="btn-primary" href="./bfm/">进入 BFM 评测 →</a>
         </div>
       </article>
@@ -245,17 +217,11 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">HOI-BFM 评测 · 全身人机物交互</h2>
-            <span class="badge badge-green">已上线 · 6 策略 × 218 条</span>
+            <span class="badge badge-green">已上线 · 6 策略</span>
           </div>
-          <p class="track-desc">在 L0 进程内 MuJoCo 闭环环境下评估人形机器人搬运、推移与手脚协同交互策略，提供按物体分桶、单片段诊断与 Ghost 叠影回放。</p>
-          <ul class="kv-list">
-            <li><strong>主排序指标</strong>：官方总分（0–100 ↑）· 手部有效交互 79 条 SR</li>
-            <li><strong>当前评测集</strong>：HOI-BFM 干净子集（218 条 = 手部 79 + 纯脚部 139）</li>
-            <li><strong>物理协议</strong>：1 ms 步长 · engage=reset · MuJoCo 实测碰撞</li>
-          </ul>
+          <p class="track-desc">面向搬运、推移与手脚协同等物体交互任务的闭环仿真评测，支持分桶对比、片段诊断与叠影回放。</p>
         </div>
         <div class="track-foot">
-          <span class="mono" style="color:var(--muted);">hoi-bfm-official-2026-11-11</span>
           <a class="btn-primary" href="./hoi-bfm-benchmark/">进入 HOI-BFM 评测 →</a>
         </div>
       </article>
@@ -263,7 +229,7 @@
   </main>
 
   <footer>
-    <span>Peace1997 · 人形机器人运动控制与基础模型评测</span>
+    <span>BFM BenchMark · Leaderboard 0.1</span>
     <span><a href="https://github.com/Peace1997" target="_blank" rel="noopener">github.com/Peace1997</a></span>
   </footer>
 </body>

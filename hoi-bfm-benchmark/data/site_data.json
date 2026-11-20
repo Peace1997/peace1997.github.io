@@ -2,7 +2,7 @@
   "fingerprint": {
     "metric_standard": "hoi-bfm-official-2026-11-11",
     "eval_commit": "5748ac3489eb",
-    "exported_at": "2026-11-20T10:00:07+08:00",
+    "exported_at": "2026-11-20T10:13:13+08:00",
     "registry_sha256": "2f84d68221ac241bc9b3c0aec13898d776d0ceb0bbdbaaa8e7abf96e55846236",
     "dataset_clipset_sha256": {
       "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
