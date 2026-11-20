@@ -247,14 +247,14 @@ function renderSetting() {
   const fp = state.siteData.fingerprint;
 
   document.getElementById("setting-desc").innerHTML = `
-    六策略在同一份 <strong>${esc(d.name)}</strong> 上从零完成 L0 进程内 MuJoCo 闭环重评（共 <strong>218 条</strong> = <strong>手部有效交互 79 条</strong>［搬起 34 + 地面推/移 45］+ <strong>纯脚部交互 139 条</strong>）。
+    六策略在同一份 <strong>${esc(d.name)}</strong> 上从零完成 L0 进程内 MuJoCo 闭环重评（共 218 条 = 手部有效交互 79 条［搬起 34 + 地面推/移 45］+ 纯脚部交互 139 条）。
     ${esc(d.denominator_note)}
   `;
 
   document.getElementById("scoring-summary").innerHTML = `
-    <strong>总分</strong>看综合表现（失败计 0 分）；<strong>成功率</strong>看任务完成比例；<strong>成功质量均分</strong>看成功后物体跟得多准。
-    成功须同时满足四项：<strong>数据有效</strong> ∧ <strong>无终止（nan / body_z / root_ori / drop）</strong> ∧ <strong>完整播放</strong> ∧ <strong>手部接触召回 ≥ ${th.contact_recall_min}（无要求则豁免）</strong>。
-    <strong>物体位置与姿态误差不作为成功门槛，仅进入 0–100 质量分。</strong>
+    <strong>总分</strong>看综合表现（失败计 0 分），<strong>成功率</strong>看任务完成比例，<strong>成功质量均分</strong>看成功后物体跟踪精度。
+    成功须同时满足四项：数据有效 ∧ 无终止（<code>nan</code> / <code>body_z</code> / <code>root_ori</code> / <code>drop</code>）∧ 完整播放 ∧ 手部接触召回 ≥ ${th.contact_recall_min}（无要求则豁免）。
+    物体位置与姿态误差不作为成功门槛，仅进入 0–100 质量分。
   `;
 
   document.getElementById("scoring-details").innerHTML = `

@@ -1,27 +1,270 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Peace1997 的个人主页，关注人形机器人运动控制。">
-  <title>Peace1997 · 个人主页</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Humanoid Benchmark — BFM 全身动作跟踪与 HOI-BFM 人机物交互统一评测平台" />
+  <title>Humanoid Benchmark · BFM &amp; HOI-BFM 评测平台</title>
   <style>
-    body { margin: 0; background: #fafbfd; color: #182738; font-family: Inter, system-ui, sans-serif; }
-    main { max-width: 46rem; margin: clamp(5rem, 22vh, 15rem) auto; padding: 0 8vw; }
-    h1 { margin: 0; font-size: clamp(3rem, 9vw, 6rem); line-height: 1.1; letter-spacing: -.06em; }
-    p { margin: 1.3rem 0 2.5rem; font-size: 1.25rem; line-height: 1.7; }
-    nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-    a { color: #285e9b; text-underline-offset: .3em; }
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --subtle: #f5f6f7;
+      --border: #dee0e3;
+      --text: #1f2329;
+      --text-2: #646a73;
+      --muted: #8f959e;
+      --accent: #3370ff;
+      --accent-bg: #ebf2fe;
+      --green: #2e7d4a;
+      --green-bg: #e6f4ea;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: 12.5px; }
+    .topbar {
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-logo { font-size: 18px; font-weight: 600; }
+    .brand-sep { color: #d0d3d6; }
+    .brand-sub { font-size: 14px; font-weight: 500; color: var(--accent); }
+    .topnav { display: flex; align-items: center; gap: 8px; }
+    .topnav a {
+      text-decoration: none;
+      color: var(--text-2);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      transition: 0.15s;
+    }
+    .topnav a:hover { background: var(--subtle); color: var(--text); }
+    .topnav a.nav-active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 24px 72px;
+    }
+    .hero {
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 14.5px;
+      max-width: 760px;
+    }
+
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .track-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .track-card:hover {
+      border-color: #9bb8ff;
+      box-shadow: 0 4px 16px rgba(51, 112, 255, 0.06);
+    }
+    .track-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .track-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-blue { background: var(--accent-bg); color: var(--accent); }
+
+    .track-desc {
+      margin: 0 0 14px;
+      color: var(--text-2);
+      font-size: 13.5px;
+    }
+    .kv-list {
+      margin: 0;
+      padding: 12px 14px;
+      list-style: none;
+      background: var(--subtle);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-2);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kv-list strong { color: var(--text); font-weight: 600; }
+
+    .track-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+    .btn-primary {
+      display: inline-block;
+      text-decoration: none;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid #c5d9fb;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 7px;
+      transition: 0.15s;
+    }
+    .btn-primary:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    footer {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12.5px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    footer a { color: var(--text-2); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 760px) {
+      .track-grid { grid-template-columns: 1fr; }
+      .brand-sep, .brand-sub { display: none; }
+    }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand-logo">Humanoid Benchmark</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Peace1997</span>
+      </a>
+      <nav class="topnav" aria-label="评测赛道导航">
+        <a href="./" class="nav-active">Home</a>
+        <a href="./bfm/">BFM 评测</a>
+        <a href="./hoi-bfm-benchmark/">HOI-BFM 评测</a>
+        <a href="https://github.com/Peace1997" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
   <main>
-    <h1>Peace1997</h1>
-    <p>关注人形机器人运动控制。</p>
-    <nav>
-      <a href="./hoi-bfm-benchmark/">HOI-BFM Benchmark</a>
-      <a href="https://github.com/Peace1997">GitHub</a>
-    </nav>
+    <div class="hero">
+      <h1>人形机器人基础模型统一评测平台</h1>
+      <p>覆盖全身动作跟踪（BFM）与全身人机物交互（HOI-BFM）两大独立赛道。各赛道严格隔离物理协议、仿真步长与计分口径，所有榜单直读离线评测真源输出，可复现、可核验。</p>
+    </div>
+
+    <div class="track-grid">
+      <article class="track-card">
+        <div>
+          <div class="track-head">
+            <h2 class="track-title">BFM 评测 · 全身动作跟踪</h2>
+            <span class="badge badge-blue">Protocol v2 · 接入就绪</span>
+          </div>
+          <p class="track-desc">在统一 MuJoCo 3.17.0 物理协议下评估人形机器人全身动作跟踪策略，支持独立轨迹复算核验（<code>motionchallenge-verify</code>）。</p>
+          <ul class="kv-list">
+            <li><strong>主排序指标</strong>：XY 平移对齐全程 MPBPE（mm，越低越好）</li>
+            <li><strong>支持机体与套件</strong>：Unitree G1 (29 DoF · LAFAN1 40 条) / Roban S17 (21 DoF)</li>
+            <li><strong>物理协议</strong>：2 ms 步长 · 摩擦 1.0 · 无观测噪声</li>
+          </ul>
+        </div>
+        <div class="track-foot">
+          <span class="mono" style="color:var(--muted);">bfm-benchmark · Protocol v2</span>
+          <a class="btn-primary" href="./bfm/">进入 BFM 评测 →</a>
+        </div>
+      </article>
+
+      <article class="track-card">
+        <div>
+          <div class="track-head">
+            <h2 class="track-title">HOI-BFM 评测 · 全身人机物交互</h2>
+            <span class="badge badge-green">已上线 · 6 策略 × 218 条</span>
+          </div>
+          <p class="track-desc">在 L0 进程内 MuJoCo 闭环环境下评估人形机器人搬运、推移与手脚协同交互策略，提供按物体分桶、单片段诊断与 Ghost 叠影回放。</p>
+          <ul class="kv-list">
+            <li><strong>主排序指标</strong>：官方总分（0–100 ↑）· 手部有效交互 79 条 SR</li>
+            <li><strong>当前评测集</strong>：HOI-BFM 干净子集（218 条 = 手部 79 + 纯脚部 139）</li>
+            <li><strong>物理协议</strong>：1 ms 步长 · engage=reset · MuJoCo 实测碰撞</li>
+          </ul>
+        </div>
+        <div class="track-foot">
+          <span class="mono" style="color:var(--muted);">hoi-bfm-official-2026-11-11</span>
+          <a class="btn-primary" href="./hoi-bfm-benchmark/">进入 HOI-BFM 评测 →</a>
+        </div>
+      </article>
+    </div>
   </main>
+
+  <footer>
+    <span>Peace1997 · 人形机器人运动控制与基础模型评测</span>
+    <span><a href="https://github.com/Peace1997" target="_blank" rel="noopener">github.com/Peace1997</a></span>
+  </footer>
 </body>
 </html>

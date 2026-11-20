@@ -1,0 +1,55 @@
+{
+  "protocol_version": "Protocol v2",
+  "engine": "MuJoCo 3.17.0 (mujoco.batch.Batch)",
+  "physics_dt_ms": 2,
+  "friction": 1.0,
+  "primary_metric": "mpjpe_xy_aligned_mm",
+  "description": "BFM Benchmark 在人形机器人统一物理协议（Protocol v2）下评估全身动作跟踪策略。策略在独立进程运行，每物理步重算 PD 力矩并做饱和限幅，输出完整轨迹、全程指标、失败前缀指标及独立复算凭据。",
+  "scoring_summary": "主排序指标为仅去除骨盆 XY 平移后的全程身体位置误差 MPBPE（单位 mm，越低越好），保留偏航角与高度误差。失败判定遵循 SuperMimic Appendix A：相对参考骨盆高度差 > 0.25 m 或单位重力投影 Z 差 > 0.8（末端偏差不作失败条件）。",
+  "alignment_modes": [
+    {
+      "field": "mpjpe_xy_aligned_m",
+      "label": "XY 对齐（主排名指标）",
+      "transform": "每帧仅对齐实际与参考骨盆 XY 平移",
+      "retained": "偏航角（Yaw）、高度、倾角与全身关节姿态误差"
+    },
+    {
+      "field": "mpjpe_xy_yaw_aligned_m",
+      "label": "XY + Yaw 对齐",
+      "transform": "对齐骨盆 XY 平移与最近世界 Z 轴旋转",
+      "retained": "高度、倾角与全身关节姿态误差（退化样本计入 yaw_alignment_degenerate_fraction）"
+    },
+    {
+      "field": "mpjpe_world_m",
+      "label": "世界坐标系（无对齐）",
+      "transform": "无任何空间对齐（含初始帧）",
+      "retained": "全局轨迹漂移与全身姿态误差"
+    }
+  ],
+  "suites": [
+    {
+      "id": "lafan-g1-29dof",
+      "name": "G1 · LAFAN1 (40 条)",
+      "robot": "Unitree G1 (29 DoF)",
+      "mjcf": "robots/g1-29dof-cpu-v0.xml",
+      "clips": 40,
+      "source_fps": 30,
+      "physics_dt": "2 ms",
+      "status": "待导入 motionchallenge-verify 正式成绩",
+      "policies_supported": "SuperMimic (40k CPU FP32) / PartyMimic G1 MLP",
+      "leaderboard": []
+    },
+    {
+      "id": "roban-s17-21dof-sub1-suitcase-070",
+      "name": "Roban S17 (21 DoF)",
+      "robot": "Roban S17 (21 DoF)",
+      "mjcf": "robots/roban-s17-21dof-cpu-v0.xml",
+      "clips": 1,
+      "source_fps": 50,
+      "physics_dt": "2 ms",
+      "status": "单条接入验证用例（无物体本体协议）",
+      "policies_supported": "参考 PD 夹具 / Roban PartyMimic ONNX",
+      "leaderboard": []
+    }
+  ]
+}

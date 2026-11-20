@@ -1,19 +1,23 @@
 :root {
   --bg: #fafafa;
   --surface: #ffffff;
-  --subtle: #f6f7f9;
-  --border: #e7e9ee;
-  --border-strong: #d5d9e2;
-  --text: #18181b;
-  --text-2: #4b5563;
-  --muted: #6b7280;
+  --subtle: #f5f6f7;
+  --border: #dee0e3;
+  --border-light: #eff0f1;
+  --border-strong: #d0d3d6;
 
-  /* Calm academic blue-slate + soft highlight column (matching AGENTS.md blue/green spec) */
-  --accent: #2b5bc7;
+  /* Feishu / Lark default neutral ink hierarchy */
+  --text: #1f2329;
+  --text-2: #646a73;
+  --muted: #8f959e;
+
+  /* Calm academic blue + soft highlight column */
+  --accent: #3370ff;
+  --accent-dark: #245bdb;
   --accent-border: #4b7be5;
   --accent-bg: #ebf2fe;
-  --col-hl: #f0f6ff;
-  --col-hl-head: #e8f1fe;
+  --col-hl: #f0f5ff;
+  --col-hl-head: #e6efff;
 
   --green: #2e7d4a;
   --green-bg: #e6f4ea;
@@ -29,16 +33,31 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Noto Sans CJK SC", "PingFang SC", "Segoe UI", sans-serif;
+  /* Feishu / Lark default font stack */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.55;
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: 12.5px;
 }
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12.5px;
+  background: #f2f3f5;
+  color: #1f2329;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+strong { font-weight: 600; color: var(--text); }
 
 /* Topbar */
 .topbar {
@@ -69,27 +88,34 @@ body {
   color: var(--text);
 }
 .brand-logo {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  color: var(--accent);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text);
 }
 .brand-sep { color: var(--border-strong); font-weight: 300; }
-.brand-sub { font-size: 15px; font-weight: 600; color: var(--text-2); }
+.brand-sub { font-size: 14px; font-weight: 500; color: var(--accent); }
 
 .topnav {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
 }
 .topnav a {
   text-decoration: none;
   color: var(--text-2);
   font-size: 13.5px;
   font-weight: 500;
-  transition: color 0.15s;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: 0.15s;
 }
-.topnav a:hover { color: var(--accent); }
+.topnav a:hover { background: var(--subtle); color: var(--text); }
+.topnav a.nav-active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
 
 .copy-btn, .btn-subtle {
   border: 1px solid var(--border-strong);
@@ -175,43 +201,43 @@ body {
 .sec-h2 {
   margin: 0;
   font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
   color: var(--text);
 }
 .sec-sub {
   margin: 4px 0 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--muted);
 }
 
 /* Benchmark Setting */
 .setting-desc {
-  margin: 10px 0 16px;
-  color: var(--text-2);
-  font-size: 13.5px;
-  line-height: 1.7;
+  margin: 12px 0 16px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.8;
 }
 
 .policy-box {
   background: var(--subtle);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
 }
 .policy-box-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--text-2);
   margin-bottom: 6px;
 }
 .policy-box p {
   margin: 0;
-  font-size: 13px;
-  color: var(--text-2);
-  line-height: 1.65;
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.78;
 }
 .inline-details { margin-top: 8px; font-size: 12.5px; }
 .inline-details summary {
@@ -596,7 +622,7 @@ body {
   .video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
-  .topnav a { display: none; }
+  .brand-sub, .brand-sep { display: none; }
   .section-card { padding: 18px 16px; }
   .video-grid, .clip-controls, .meta-strip { grid-template-columns: 1fr; }
 }
