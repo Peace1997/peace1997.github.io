@@ -55,8 +55,26 @@ function setupScrollSpy() {
 
 function renderSetting() {
   const d = state.data;
-  document.getElementById("bfm-desc").textContent = d.description;
-  document.getElementById("bfm-scoring").textContent = d.scoring_summary;
+  document.getElementById("bfm-desc").innerHTML = `
+    Whole-body humanoid motion-tracking benchmark under unified <strong>${esc(d.protocol_version)}</strong> (${esc(d.engine)}).<br />
+    Policies run in isolated processes with per-step PD recomputation and independent trace verification.
+  `;
+  document.getElementById("bfm-scoring").innerHTML = `
+    <li><strong>Primary Metric</strong>: Full-motion XY-aligned MPBPE in millimeters (lower is better; retains yaw &amp; height).</li>
+    <li><strong>Failure Rules</strong>: Root height error &gt; 0.25 m or projected gravity Z error &gt; 0.8 (SuperMimic Appendix A).</li>
+    <li><strong>Verification</strong>: Every submission is independently recomputed via <code>motionchallenge-verify</code>.</li>
+  `;
+  document.getElementById("bfm-details").innerHTML = `
+    <table class="mini-table">
+      <thead><tr><th>Item</th><th>Specification</th></tr></thead>
+      <tbody>
+        <tr><td>Physics Step &amp; Friction</td><td>${d.physics_dt_ms} ms timestep · friction ${d.friction.toFixed(1)} · no obs noise</td></tr>
+        <tr><td>Failure Conditions</td><td>Root height diff &gt; 0.25 m or projected unit-gravity Z diff &gt; 0.8 (equality passes)</td></tr>
+        <tr><td>End-Effector Deviation</td><td>Not a failure condition</td></tr>
+        <tr><td>Trace Verification</td><td>Hash-checked suite manifest + independent FK &amp; metric recomputation</td></tr>
+      </tbody>
+    </table>
+  `;
   document.getElementById("bfm-meta").innerHTML = `
     <div><div class="meta-item-k">Physics Engine</div><div class="meta-item-v">${esc(d.engine)}</div></div>
     <div><div class="meta-item-k">Timestep &amp; Friction</div><div class="meta-item-v">${d.physics_dt_ms} ms · friction ${d.friction.toFixed(1)}</div></div>

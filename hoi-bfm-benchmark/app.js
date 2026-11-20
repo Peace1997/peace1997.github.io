@@ -46,7 +46,7 @@ const MOD_BADGE = {
 };
 
 async function init() {
-  const v = "20261120104032";
+  const v = "20261120104818";
   const [siteRes, clipsRes] = await Promise.all([
     fetch(`data/site_data.json?v=${v}`, { cache: "no-store" }),
     fetch(`data/clips_clean_218.json?v=${v}`, { cache: "no-store" }),
@@ -111,18 +111,6 @@ function syncHash() {
 }
 
 function bindEvents() {
-  document.getElementById("copy-link-btn").addEventListener("click", async () => {
-    syncHash();
-    const btn = document.getElementById("copy-link-btn");
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      btn.textContent = "Copied";
-    } catch {
-      btn.textContent = "Copy URL";
-    }
-    setTimeout(() => { btn.textContent = "Copy Link"; }, 1500);
-  });
-
   document.getElementById("sort-chips").addEventListener("click", (e) => {
     const btn = e.target.closest(".chip");
     if (!btn) return;
@@ -253,26 +241,49 @@ function renderSetting() {
   const fp = state.siteData.fingerprint;
 
   document.getElementById("setting-desc").innerHTML = `
-    All 6 policies are evaluated from scratch in closed-loop L0 in-process MuJoCo on the same <strong>${esc(d.name)}</strong>
-    (218 clips = 79 hand interaction [34 lift + 45 ground push] + 139 foot-only). ${esc(d.denominator_note)}
+    Closed-loop L0 MuJoCo evaluation (1 ms physics) on the <strong>${esc(d.name)}</strong>.<br />
+    218 clips in total: <strong>79 hand interaction</strong> (34 lift + 45 ground push) and <strong>139 foot-only</strong>.
   `;
 
   document.getElementById("scoring-summary").innerHTML = `
-    <strong>Total Score</strong> reflects overall performance (failed episodes score 0), <strong>Success Rate</strong> measures task completion, and <strong>Quality</strong> measures object tracking accuracy on successful episodes.
-    Success requires all four gates: valid metrics ∧ no termination (<code>nan</code> / <code>body_z</code> / <code>root_ori</code> / <code>drop</code>) ∧ completeness ∧ hand contact recall ≥ ${th.contact_recall_min} (exempt when no hand contact is required).
-    Object position and orientation errors are not success gates and only enter the 0–100 quality score.
+    <li><strong>Success</strong>: Passes all 4 hard gates (valid metrics, no failure termination, completeness, hand contact recall ≥ ${th.contact_recall_min} or exempt).</li>
+    <li><strong>Quality (0–100)</strong>: Relative object pose accuracy (<code>${th.score_w_pos} × pos + ${th.score_w_ori} × ori</code>); object pose is not a success gate.</li>
+    <li><strong>Total Score</strong>: Mean episode score across all 218 clips (failed episodes score 0).</li>
   `;
 
   document.getElementById("scoring-details").innerHTML = `
-    <div>• <strong>Relative Reference Alignment</strong>: Each frame aligns the reference object by the actual-vs-reference pelvis XY translation and yaw (preserving reference z).</div>
-    <div>• <strong>Quality Score (0–100)</strong>: <code>quality = ${th.score_w_pos} · pos_score + ${th.score_w_ori} · ori_score</code>; each component averages mean &amp; final linear hinge scores (pos: full ≤ ${th.score_pos_full} m, zero ≥ ${th.score_pos_zero} m; ori: full ≤ ${th.score_ori_full} rad, zero ≥ ${th.score_ori_zero} rad).</div>
-    <div>• <strong>Termination Rules</strong>: <code>body_z</code> &gt; ${th.body_z_err} m for ${th.body_z_steps} steps (${th.body_z_err_low_ref} m when ref root z &lt; ${th.body_z_low_ref_root} m); <code>root_ori</code> tilt squared &gt; ${th.root_ori_err_sq} for ${th.root_ori_steps} steps (yaw-invariant); <code>drop</code> requires contact ∧ clearance &gt; ${th.drop_ref_clearance} m ∧ object below ref &gt; ${th.drop_z_below_ref} m for ${th.drop_steps} steps.</div>
+    <div class="details-grid">
+      <div>
+        <div class="details-table-title">Failure Terminations</div>
+        <table class="mini-table">
+          <thead><tr><th>Type</th><th>Rule</th><th>Steps</th></tr></thead>
+          <tbody>
+            <tr><td><code>nan</code></td><td>Non-finite state or degenerate quaternion</td><td>1</td></tr>
+            <tr><td><code>body_z</code></td><td>|z − z_ref| &gt; ${th.body_z_err} m (${th.body_z_err_low_ref} m if ref z &lt; ${th.body_z_low_ref_root} m)</td><td>${th.body_z_steps}</td></tr>
+            <tr><td><code>root_ori</code></td><td>Pelvis gravity tilt² &gt; ${th.root_ori_err_sq} (yaw-invariant)</td><td>${th.root_ori_steps}</td></tr>
+            <tr><td><code>drop</code></td><td>Contact ∧ clearance &gt; ${th.drop_ref_clearance} m ∧ below ref &gt; ${th.drop_z_below_ref} m</td><td>${th.drop_steps}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="details-table-title">Quality Score Hinge (Relative Reference)</div>
+        <table class="mini-table">
+          <thead><tr><th>Component</th><th>Weight</th><th>Full (100)</th><th>Zero (0)</th></tr></thead>
+          <tbody>
+            <tr><td>Position (50% mean + 50% final)</td><td>${th.score_w_pos}</td><td>≤ ${th.score_pos_full} m</td><td>≥ ${th.score_pos_zero} m</td></tr>
+            <tr><td>Orientation (50% mean + 50% final)</td><td>${th.score_w_ori}</td><td>≤ ${th.score_ori_full} rad</td><td>≥ ${th.score_ori_zero} rad</td></tr>
+            <tr><td>Truncation (non-failure)</td><td>—</td><td colspan="2">Ref root |x| or |y| &gt; ${th.motion_xy_range} m</td></tr>
+            <tr><td>Clean Subset Filter</td><td>—</td><td colspan="2">847 → 218 (drops pose bias, &gt;3 cm penetration, unlabeled)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   `;
 
   document.getElementById("meta-strip").innerHTML = `
-    <div><div class="meta-item-k">Evaluation Set &amp; Denominator</div><div class="meta-item-v">218 Clean Subset (played = 218)</div></div>
-    <div><div class="meta-item-k">Simulation &amp; Engage</div><div class="meta-item-v">1 ms physics dt · engage=reset</div></div>
-    <div><div class="meta-item-k">Contact Ground Truth</div><div class="meta-item-v">MuJoCo real collision · data_hoi</div></div>
+    <div><div class="meta-item-k">Evaluation Set</div><div class="meta-item-v">218 Clean Subset (played = 218)</div></div>
+    <div><div class="meta-item-k">Simulation</div><div class="meta-item-v">1 ms physics · engage=reset</div></div>
+    <div><div class="meta-item-k">Contact Signal</div><div class="meta-item-v">MuJoCo collision · data_hoi</div></div>
     <div><div class="meta-item-k">Standard / Commit</div><div class="meta-item-v mono">${esc(fp.metric_standard)} · ${esc(fp.eval_commit.slice(0, 8))}</div></div>
   `;
 }

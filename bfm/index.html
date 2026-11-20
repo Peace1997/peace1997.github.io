@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>BFM BenchMark · Leaderboard 0.1</title>
-  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261120en" />
+  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261120v2" />
 </head>
 <body>
   <header class="topbar">
@@ -43,8 +43,12 @@
         <p class="setting-desc" id="bfm-desc"></p>
 
         <div class="policy-box">
-          <div class="policy-box-title">PROTOCOL V2 · SCORING &amp; FAILURE RULES (MuJoCo 3.17.0)</div>
-          <p id="bfm-scoring"></p>
+          <div class="policy-box-title">SCORING SUMMARY · Protocol v2 (MuJoCo 3.17.0)</div>
+          <ul class="summary-points" id="bfm-scoring"></ul>
+          <details class="inline-details">
+            <summary>Show failure rules &amp; protocol table</summary>
+            <div id="bfm-details" class="details-body"></div>
+          </details>
         </div>
 
         <div class="meta-strip" id="bfm-meta"></div>
@@ -138,6 +142,6 @@ uv run motionchallenge-verify --robot robots/g1-29dof-cpu-v0.json --suite suites
     </main>
   </div>
 
-  <script type="module" src="app.js?v=20261120en"></script>
+  <script type="module" src="app.js?v=20261120v2"></script>
 </body>
 </html>
