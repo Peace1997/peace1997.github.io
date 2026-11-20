@@ -46,9 +46,10 @@ const MOD_BADGE = {
 };
 
 async function init() {
+  const v = "20261120104032";
   const [siteRes, clipsRes] = await Promise.all([
-    fetch("data/site_data.json"),
-    fetch("data/clips_clean_218.json"),
+    fetch(`data/site_data.json?v=${v}`, { cache: "no-store" }),
+    fetch(`data/clips_clean_218.json?v=${v}`, { cache: "no-store" }),
   ]);
   if (!siteRes.ok || !clipsRes.ok) throw new Error("Failed to load benchmark snapshot JSON");
   state.siteData = await siteRes.json();

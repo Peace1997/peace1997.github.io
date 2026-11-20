@@ -7,7 +7,7 @@ const state = {
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
 async function init() {
-  const res = await fetch("data/bfm_data.json");
+  const res = await fetch("data/bfm_data.json?v=20261120en", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load data/bfm_data.json");
   state.data = await res.json();
   state.suiteId = state.data.suites[0].id;
