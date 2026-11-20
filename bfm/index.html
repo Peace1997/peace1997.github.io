@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css" />
 </head>
 <body>
-  <!-- Clean Top Bar: BFM & HOI-BFM Track Switcher -->
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="../">
@@ -15,34 +14,35 @@
         <span class="brand-sep">|</span>
         <span class="brand-sub">Leaderboard 0.1</span>
       </a>
-      <nav class="topnav" aria-label="评测赛道导航">
+      <nav class="topnav" aria-label="Track Navigation">
         <a href="../">Home</a>
-        <a href="./" class="nav-active">BFM 评测</a>
-        <a href="../hoi-bfm-benchmark/">HOI-BFM 评测</a>
+        <a href="./" class="nav-active">BFM</a>
+        <a href="../hoi-bfm-benchmark/">HOI-BFM</a>
       </nav>
     </div>
   </header>
 
   <div class="page-shell">
-    <aside class="sidebar" aria-label="页面目录">
+    <aside class="sidebar" aria-label="On This Page">
       <div class="sidebar-title">ON THIS PAGE</div>
       <ul class="toc" id="toc-list">
-        <li><a href="#setting" class="active">评测协议</a></li>
-        <li><a href="#ranking">策略总榜</a></li>
-        <li><a href="#alignment">位置对齐模式</a></li>
-        <li><a href="#suites">机体与套件</a></li>
-        <li><a href="#verify">复算与接入</a></li>
+        <li><a href="#setting" class="active">Setting</a></li>
+        <li><a href="#ranking">Overall Ranking</a></li>
+        <li><a href="#alignment">Alignment Modes</a></li>
+        <li><a href="#suites">Robots &amp; Suites</a></li>
+        <li><a href="#verify">Verification</a></li>
+        <li><a href="#news">News</a></li>
       </ul>
     </aside>
 
     <main class="content">
       <!-- 1. Protocol Setting -->
       <section id="setting" class="section-card">
-        <h2 class="sec-h2">Benchmark Setting · BFM 评测设定</h2>
+        <h2 class="sec-h2">Benchmark Setting</h2>
         <p class="setting-desc" id="bfm-desc"></p>
 
         <div class="policy-box">
-          <div class="policy-box-title">PROTOCOL V2 · 核心计分与失败判定（MuJoCo 3.17.0）</div>
+          <div class="policy-box-title">PROTOCOL V2 · SCORING &amp; FAILURE RULES (MuJoCo 3.17.0)</div>
           <p id="bfm-scoring"></p>
         </div>
 
@@ -53,23 +53,23 @@
       <section id="ranking" class="section-card">
         <div class="control-bar">
           <div class="ctrl-group">
-            <span class="ctrl-label">套件</span>
+            <span class="ctrl-label">Suite</span>
             <div class="chip-row" id="bfm-suite-chips"></div>
           </div>
           <div class="ctrl-group">
             <span class="ctrl-label">Rank by</span>
             <div class="chip-row" id="bfm-sort-chips">
-              <button class="chip active" data-sort="mpjpe_xy_aligned_mm">MPBPE · XY 对齐 (↓)</button>
+              <button class="chip active" data-sort="mpjpe_xy_aligned_mm">MPBPE · XY (↓)</button>
               <button class="chip" data-sort="mpjpe_xy_yaw_aligned_mm">MPBPE · XY+Yaw (↓)</button>
-              <button class="chip" data-sort="mpjpe_world_mm">MPBPE · 世界系 (↓)</button>
-              <button class="chip" data-sort="success_rate">成功率 (↑)</button>
+              <button class="chip" data-sort="mpjpe_world_mm">MPBPE · World (↓)</button>
+              <button class="chip" data-sort="success_rate">Success Rate (↑)</button>
             </div>
           </div>
         </div>
 
         <div class="board-head">
           <div>
-            <h2 class="sec-h2" id="bfm-rank-heading">Overall Ranking · BFM 动作跟踪</h2>
+            <h2 class="sec-h2" id="bfm-rank-heading">Overall Ranking · BFM</h2>
             <p class="sec-sub" id="bfm-rank-sub"></p>
           </div>
           <span class="tag-pill tag-blue">Protocol v2</span>
@@ -84,8 +84,8 @@
       <section id="alignment" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Three Position Alignment Modes · 三种位置对齐口径</h2>
-            <p class="sec-sub">所有策略均同时输出以下三种欧氏距离均方根指标（单位 mm，不对齐 Z 轴、横滚/俯仰、尺度或时间）</p>
+            <h2 class="sec-h2">Position Alignment Modes</h2>
+            <p class="sec-sub">All three mean Euclidean body-position errors (mm) are reported for every model; Z, roll/pitch, scale, and time are never aligned</p>
           </div>
         </div>
         <div class="table-wrap">
@@ -97,8 +97,8 @@
       <section id="suites" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Robots &amp; Suites · 机器人模型与评测套件</h2>
-            <p class="sec-sub">套件清单均做哈希校验，不同机体与套件独立排行，严禁混榜</p>
+            <h2 class="sec-h2">Robots &amp; Suites</h2>
+            <p class="sec-sub">Each suite manifest is hash-verified; robots and suites are ranked independently</p>
           </div>
         </div>
         <div class="table-wrap">
@@ -110,8 +110,8 @@
       <section id="verify" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Verification &amp; CLI · 独立核验与数据接入</h2>
-            <p class="sec-sub">所有上榜成绩须附带可复算轨迹，并通过 <code>motionchallenge-verify</code> 独立复算校验</p>
+            <h2 class="sec-h2">Verification &amp; CLI</h2>
+            <p class="sec-sub">Published scores must include reproducible pose traces verified via <code>motionchallenge-verify</code></p>
           </div>
         </div>
         <div class="policy-box" style="margin-bottom:0;">
@@ -122,6 +122,17 @@ uv run motionchallenge-verify --robot robots/g1-29dof-cpu-v0.json --suite suites
   --protocol suites/lafan/protocol.mujoco317-ideal-proprioception-none-v2.json \
   --controller control.json --data /path/to/lafan --result /path/to/run_out/result.json</pre>
         </div>
+      </section>
+
+      <!-- 6. News -->
+      <section id="news" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">News</h2>
+            <p class="sec-sub">BFM track suite, robot, and policy onboarding timeline</p>
+          </div>
+        </div>
+        <ul class="news-list" id="bfm-news-list"></ul>
       </section>
     </main>
   </div>

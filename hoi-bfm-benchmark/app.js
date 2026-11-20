@@ -26,17 +26,17 @@ const fmtNum = (v, d = 2) => (v == null ? "—" : Number(v).toFixed(d));
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
 const INTER_LABELS = {
-  hand_lift: "手部搬起",
-  hand_ground: "手部地面推/移",
-  foot_only: "纯脚部交互",
+  hand_lift: "Hand Lift",
+  hand_ground: "Hand Ground Push",
+  foot_only: "Foot-Only",
 };
 
 const SORT_META = {
-  total_score: { title: "总分（0–100）", hint: "按 总分（官方口径）降序 ↓" },
-  sr: { title: "成功率（SR）", hint: "按 成功率 降序 ↓" },
-  hand_all: { title: "手部有效交互（79 条）", hint: "按 手部有效交互总分 降序 ↓" },
-  foot_only: { title: "纯脚部交互（139 条）", hint: "按 纯脚部交互总分 降序 ↓" },
-  quality: { title: "成功质量均分", hint: "按 成功片段质量均分 降序 ↓" },
+  total_score: { title: "Total Score (0–100)", hint: "Ranked by Total Score (official) ↓" },
+  sr: { title: "Success Rate (SR)", hint: "Ranked by Success Rate ↓" },
+  hand_all: { title: "Hand Interaction (79 Clips)", hint: "Ranked by Hand Interaction Score ↓" },
+  foot_only: { title: "Foot-Only Interaction (139 Clips)", hint: "Ranked by Foot-Only Score ↓" },
+  quality: { title: "Mean Quality (Success)", hint: "Ranked by Mean Success Quality ↓" },
 };
 
 const MOD_BADGE = {
@@ -50,7 +50,7 @@ async function init() {
     fetch("data/site_data.json"),
     fetch("data/clips_clean_218.json"),
   ]);
-  if (!siteRes.ok || !clipsRes.ok) throw new Error("无法加载评测快照 JSON");
+  if (!siteRes.ok || !clipsRes.ok) throw new Error("Failed to load benchmark snapshot JSON");
   state.siteData = await siteRes.json();
   state.clipsData = await clipsRes.json();
   state.datasetId = state.siteData.default_dataset;
@@ -67,6 +67,7 @@ async function init() {
   renderClipList();
   renderVideos();
   renderRegistry();
+  renderNews();
 }
 
 function ds() {
@@ -74,7 +75,7 @@ function ds() {
 }
 
 function pMeta(pid) {
-  return state.siteData.policies[pid] || { id: pid, label: pid, modality: "", modality_tag: "depth", backend: "" };
+  return state.siteData.policies[pid] || { id: pid, label: pid, modality: "", modality_tag: "depth", backend: "", added_date: "—" };
 }
 
 function pName(pid) {
@@ -114,11 +115,11 @@ function bindEvents() {
     const btn = document.getElementById("copy-link-btn");
     try {
       await navigator.clipboard.writeText(window.location.href);
-      btn.textContent = "已复制";
+      btn.textContent = "Copied";
     } catch {
-      btn.textContent = "请复制地址栏";
+      btn.textContent = "Copy URL";
     }
-    setTimeout(() => { btn.textContent = "复制链接"; }, 1500);
+    setTimeout(() => { btn.textContent = "Copy Link"; }, 1500);
   });
 
   document.getElementById("sort-chips").addEventListener("click", (e) => {
@@ -251,27 +252,27 @@ function renderSetting() {
   const fp = state.siteData.fingerprint;
 
   document.getElementById("setting-desc").innerHTML = `
-    六策略在同一份 <strong>${esc(d.name)}</strong> 上从零完成 L0 进程内 MuJoCo 闭环重评（共 218 条 = 手部有效交互 79 条［搬起 34 + 地面推/移 45］+ 纯脚部交互 139 条）。
-    ${esc(d.denominator_note)}
+    All 6 policies are evaluated from scratch in closed-loop L0 in-process MuJoCo on the same <strong>${esc(d.name)}</strong>
+    (218 clips = 79 hand interaction [34 lift + 45 ground push] + 139 foot-only). ${esc(d.denominator_note)}
   `;
 
   document.getElementById("scoring-summary").innerHTML = `
-    <strong>总分</strong>看综合表现（失败计 0 分），<strong>成功率</strong>看任务完成比例，<strong>成功质量均分</strong>看成功后物体跟踪精度。
-    成功须同时满足四项：数据有效 ∧ 无终止（<code>nan</code> / <code>body_z</code> / <code>root_ori</code> / <code>drop</code>）∧ 完整播放 ∧ 手部接触召回 ≥ ${th.contact_recall_min}（无要求则豁免）。
-    物体位置与姿态误差不作为成功门槛，仅进入 0–100 质量分。
+    <strong>Total Score</strong> reflects overall performance (failed episodes score 0), <strong>Success Rate</strong> measures task completion, and <strong>Quality</strong> measures object tracking accuracy on successful episodes.
+    Success requires all four gates: valid metrics ∧ no termination (<code>nan</code> / <code>body_z</code> / <code>root_ori</code> / <code>drop</code>) ∧ completeness ∧ hand contact recall ≥ ${th.contact_recall_min} (exempt when no hand contact is required).
+    Object position and orientation errors are not success gates and only enter the 0–100 quality score.
   `;
 
   document.getElementById("scoring-details").innerHTML = `
-    <div>• <strong>相对参考对齐</strong>：每帧按实际/参考骨盆 XY 平移与 yaw 补偿参考物体（保留参考 z），消除纯偏航/水平漂移误判。</div>
-    <div>• <strong>质量分公式</strong>：<code>quality = ${th.score_w_pos} · pos_score + ${th.score_w_ori} · ori_score</code>；单项为全程均值与终点各占 50% 的线性 hinge（位置满分 ≤ ${th.score_pos_full} m / 零分 ≥ ${th.score_pos_zero} m；姿态满分 ≤ ${th.score_ori_full} rad / 零分 ≥ ${th.score_ori_zero} rad）。</div>
-    <div>• <strong>终止阈值</strong>：<code>body_z</code> &gt; ${th.body_z_err} m（连续 ${th.body_z_steps} 步，低参考根高 &lt;${th.body_z_low_ref_root} m 放宽至 ${th.body_z_err_low_ref} m）；<code>root_ori</code> 倾斜角平方 &gt; ${th.root_ori_err_sq}（连续 ${th.root_ori_steps} 步）；<code>drop</code> 需手接触 ∧ 离地 &gt;${th.drop_ref_clearance} m ∧ 低于参考 &gt;${th.drop_z_below_ref} m（连续 ${th.drop_steps} 步）。</div>
+    <div>• <strong>Relative Reference Alignment</strong>: Each frame aligns the reference object by the actual-vs-reference pelvis XY translation and yaw (preserving reference z).</div>
+    <div>• <strong>Quality Score (0–100)</strong>: <code>quality = ${th.score_w_pos} · pos_score + ${th.score_w_ori} · ori_score</code>; each component averages mean &amp; final linear hinge scores (pos: full ≤ ${th.score_pos_full} m, zero ≥ ${th.score_pos_zero} m; ori: full ≤ ${th.score_ori_full} rad, zero ≥ ${th.score_ori_zero} rad).</div>
+    <div>• <strong>Termination Rules</strong>: <code>body_z</code> &gt; ${th.body_z_err} m for ${th.body_z_steps} steps (${th.body_z_err_low_ref} m when ref root z &lt; ${th.body_z_low_ref_root} m); <code>root_ori</code> tilt squared &gt; ${th.root_ori_err_sq} for ${th.root_ori_steps} steps (yaw-invariant); <code>drop</code> requires contact ∧ clearance &gt; ${th.drop_ref_clearance} m ∧ object below ref &gt; ${th.drop_z_below_ref} m for ${th.drop_steps} steps.</div>
   `;
 
   document.getElementById("meta-strip").innerHTML = `
-    <div><div class="meta-item-k">评测集与分母</div><div class="meta-item-v">218 干净子集（played = 218）</div></div>
-    <div><div class="meta-item-k">物理与控制步长</div><div class="meta-item-v">1 ms 物理步长 · engage=reset</div></div>
-    <div><div class="meta-item-k">接触信号真源</div><div class="meta-item-v">MuJoCo 实测碰撞 · data_hoi 标注</div></div>
-    <div><div class="meta-item-k">计分标准 / 提交</div><div class="meta-item-v mono">${esc(fp.metric_standard)} · ${esc(fp.eval_commit.slice(0, 8))}</div></div>
+    <div><div class="meta-item-k">Evaluation Set &amp; Denominator</div><div class="meta-item-v">218 Clean Subset (played = 218)</div></div>
+    <div><div class="meta-item-k">Simulation &amp; Engage</div><div class="meta-item-v">1 ms physics dt · engage=reset</div></div>
+    <div><div class="meta-item-k">Contact Ground Truth</div><div class="meta-item-v">MuJoCo real collision · data_hoi</div></div>
+    <div><div class="meta-item-k">Standard / Commit</div><div class="meta-item-v mono">${esc(fp.metric_standard)} · ${esc(fp.eval_commit.slice(0, 8))}</div></div>
   `;
 }
 
@@ -294,15 +295,15 @@ function renderRanking() {
   const thead = `
     <thead>
       <tr>
-        <th style="width:64px;">Rank</th>
-        <th class="left">策略（Policy）</th>
-        <th>模态</th>
-        <th class="${hl("total_score")}">总分</th>
-        <th class="${hl("sr")}">成功率 (成功/218)</th>
-        <th class="${hl("hand_all")}">手部有效交互 (79)</th>
-        <th class="${hl("foot_only")}">纯脚部交互 (139)</th>
-        <th class="${hl("quality")}">成功质量均分</th>
-        <th>站立失败</th>
+        <th style="width:60px;">Rank</th>
+        <th class="left">Policy</th>
+        <th>Modality</th>
+        <th class="${hl("total_score")}">Total Score</th>
+        <th class="${hl("sr")}">Success Rate</th>
+        <th class="${hl("hand_all")}">Hand (79)</th>
+        <th class="${hl("foot_only")}">Foot-Only (139)</th>
+        <th class="${hl("quality")}">Quality (Succ)</th>
+        <th>Added</th>
       </tr>
     </thead>
   `;
@@ -327,12 +328,12 @@ function renderRanking() {
               <td class="${hl("hand_all")}">${fmtNum(h.total_score, 2)}<span class="sub-val">${fmtPct(h.sr)} (${h.successes}/${h.n})</span></td>
               <td class="${hl("foot_only")}">${fmtNum(f.total_score, 2)}<span class="sub-val">${fmtPct(f.sr)} (${f.successes}/${f.n})</span></td>
               <td class="${hl("quality")}">${fmtNum(r.mean_quality_success, 2)}</td>
-              <td>${r.stand_failed}</td>
+              <td class="mono" style="color:var(--muted);">${esc(pm.added_date || "—")}</td>
             </tr>
           `;
         })
         .join("")
-    : `<tr><td colspan="9" class="empty-msg">当前模态筛选下无策略</td></tr>`;
+    : `<tr><td colspan="9" class="empty-msg">No policies match the selected modality</td></tr>`;
 
   const tbl = document.getElementById("ranking-table");
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
@@ -346,7 +347,7 @@ function renderObjectTable() {
   const rows = visibleRows();
   const tbl = document.getElementById("object-table");
   if (!rows.length) {
-    tbl.innerHTML = `<tbody><tr><td class="empty-msg">当前模态筛选下无策略</td></tr></tbody>`;
+    tbl.innerHTML = `<tbody><tr><td class="empty-msg">No policies match the selected modality</td></tr></tbody>`;
     return;
   }
 
@@ -356,7 +357,7 @@ function renderObjectTable() {
   const thead = `
     <thead>
       <tr>
-        <th class="left">物体类别（条数）</th>
+        <th class="left">Object (n)</th>
         ${rows.map((r) => `<th class="mono">${esc(pName(r.policy_id))}</th>`).join("")}
       </tr>
     </thead>
@@ -380,7 +381,7 @@ function renderObjectTable() {
           const isLow = v < 20;
           const cls = `cell-click ${isBest ? "cell-best" : isLow ? "cell-warn" : ""}`;
           const text = state.objMetric === "sr" ? `${(d.sr * 100).toFixed(1)}%` : fmtNum(d.total_score, 1);
-          return `<td class="${cls}" data-obj="${esc(obj)}" data-pol="${esc(r.policy_id)}" title="点击查看 ${esc(obj)} × ${esc(r.policy_id)}">${text}<span class="sub-val">${d.successes}/${d.n}</span></td>`;
+          return `<td class="${cls}" data-obj="${esc(obj)}" data-pol="${esc(r.policy_id)}" title="Inspect ${esc(obj)} × ${esc(pName(r.policy_id))}">${text}<span class="sub-val">${d.successes}/${d.n}</span></td>`;
         })
         .join("");
 
@@ -394,7 +395,7 @@ function renderObjectTable() {
   });
 }
 
-/* 4. Failure Table (clean tabular breakdown matching COMPARISON.md §五) */
+/* 4. Failure Table */
 function renderFailureTable() {
   const rows = visibleRows();
   const cols = ["drop", "contact_recall", "incomplete", "body_z", "root_ori"];
@@ -402,8 +403,8 @@ function renderFailureTable() {
   const thead = `
     <thead>
       <tr>
-        <th class="left">策略（Policy）</th>
-        <th>失败片段数</th>
+        <th class="left">Policy</th>
+        <th>Failed Clips</th>
         ${cols.map((c) => `<th class="mono">${c}</th>`).join("")}
       </tr>
     </thead>
@@ -417,7 +418,7 @@ function renderFailureTable() {
         .map((c) => {
           const cnt = fr[c] || 0;
           if (cnt === 0) return `<td class="cell-zero">0</td>`;
-          return `<td class="cell-click" data-fpol="${esc(r.policy_id)}" data-ftag="${esc(c)}" title="点击查看 ${esc(r.policy_id)} 的 ${c} 失败片段"><strong>${cnt}</strong></td>`;
+          return `<td class="cell-click" data-fpol="${esc(r.policy_id)}" data-ftag="${esc(c)}" title="Inspect ${esc(pName(r.policy_id))} clips with ${c}"><strong>${cnt}</strong></td>`;
         })
         .join("");
       return `
@@ -445,15 +446,15 @@ function populateClipFilters() {
   const inters = [...new Set(clips.map((c) => c.interaction_type))].sort();
 
   document.getElementById("clip-object-filter").innerHTML =
-    `<option value="all">全部物体 (${objs.length})</option>` +
+    `<option value="all">All Objects (${objs.length})</option>` +
     objs.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
 
   document.getElementById("clip-inter-filter").innerHTML =
-    `<option value="all">全部交互类型</option>` +
+    `<option value="all">All Interaction Types</option>` +
     inters.map((i) => `<option value="${esc(i)}">${esc(INTER_LABELS[i] || i)}</option>`).join("");
 
   document.getElementById("clip-policy-filter").innerHTML =
-    `<option value="all">全部策略</option>` +
+    `<option value="all">All Policies</option>` +
     pids.map((p) => `<option value="${esc(p)}">${esc(pName(p))}</option>`).join("");
 
   const opts = pids.map((p) => `<option value="${esc(p)}">${esc(pName(p))}</option>`).join("");
@@ -508,11 +509,11 @@ function renderClipList() {
     return true;
   });
 
-  document.getElementById("clip-count").textContent = `匹配 ${filtered.length} / ${clips.length} 条片段`;
+  document.getElementById("clip-count").textContent = `Matched ${filtered.length} / ${clips.length} clips`;
   const listEl = document.getElementById("clip-list");
   if (!filtered.length) {
     state.selectedClip = null;
-    listEl.innerHTML = `<div class="empty-msg">无匹配片段</div>`;
+    listEl.innerHTML = `<div class="empty-msg">No matching clips</div>`;
     renderClipDetail(null);
     return;
   }
@@ -532,7 +533,7 @@ function renderClipList() {
           <div class="clip-row-tags">
             <span class="tag-pill">${esc(c.object)}</span>
             <span class="tag-pill">${esc(INTER_LABELS[c.interaction_type] || c.interaction_type)}</span>
-            <span class="tag-pill ${cls}">${succ}/${pids.length} 成功</span>
+            <span class="tag-pill ${cls}">${succ}/${pids.length} passed</span>
           </div>
         </button>
       `;
@@ -557,7 +558,7 @@ function renderClipList() {
 function renderClipDetail(clip) {
   const el = document.getElementById("clip-detail");
   if (!clip) {
-    el.innerHTML = `<div class="empty-msg">请选择左侧片段查看跨策略明细</div>`;
+    el.innerHTML = `<div class="empty-msg">Select a clip on the left to inspect cross-policy diagnostics</div>`;
     return;
   }
   const pids = state.clipsData.policies;
@@ -571,14 +572,14 @@ function renderClipDetail(clip) {
       const r = clip.results[pid];
       const hl = state.highlightPolicy === pid ? "row-hl" : "";
       const hasVid = clipVids.some((v) => v.policy_id === pid);
-      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pid)}</td><td colspan="6">—</td></tr>`;
+      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="6">—</td></tr>`;
       const badge = r.success
-        ? `<span class="tag-pill tag-green">成功</span>`
+        ? `<span class="tag-pill tag-green">Success</span>`
         : `<span class="tag-pill tag-coral">${esc((r.fail_reasons || []).join(", ") || r.fail_reason)}</span>`;
-      const contact = r.contact_exempt ? "豁免" : r.contact_recall != null ? fmtPct(r.contact_recall) : "—";
+      const contact = r.contact_exempt ? "Exempt" : r.contact_recall != null ? fmtPct(r.contact_recall) : "—";
       return `
         <tr class="${hl}">
-          <td class="left mono" style="font-weight:600;">${esc(pName(pid))}${hasVid ? ` <span class="tag-pill tag-blue">视频</span>` : ""}</td>
+          <td class="left mono" style="font-weight:600;">${esc(pName(pid))}${hasVid ? ` <span class="tag-pill tag-blue">Video</span>` : ""}</td>
           <td>${badge}</td>
           <td><strong>${fmtNum(r.episode_score, 2)}</strong></td>
           <td>${fmtNum(r.quality_score, 2)}</td>
@@ -595,7 +596,7 @@ function renderClipDetail(clip) {
     vidHtml = `
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <strong style="font-size:13px;">Ghost 叠影回放（策略：<span class="mono">${esc(pName(matchedVid.policy_id))}</span>）</strong>
+          <strong style="font-size:13px;">Ghost Replay (Policy: <span class="mono">${esc(pName(matchedVid.policy_id))}</span>)</strong>
           <span class="tag-pill tag-blue">${matchedVid.size_mb} MB</span>
         </div>
         <video controls preload="metadata" poster="${esc(matchedVid.poster_url || "")}" style="width:100%;max-height:340px;border-radius:8px;background:#0f172a;">
@@ -604,27 +605,27 @@ function renderClipDetail(clip) {
       </div>
     `;
   } else if (clipVids.length && state.highlightPolicy) {
-    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">当前策略 <code>${esc(pName(state.highlightPolicy))}</code> 未录制视频（已录制：${clipVids.map((v) => pName(v.policy_id)).join(", ")}）。</div>`;
+    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">No video recorded for <code>${esc(pName(state.highlightPolicy))}</code> on this clip (recorded: ${clipVids.map((v) => pName(v.policy_id)).join(", ")}).</div>`;
   }
 
   el.innerHTML = `
     <div style="margin-bottom:12px;">
       <div class="mono" style="font-size:14.5px;font-weight:700;">${esc(clip.clip)}</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px;">
-        包：${esc(clip.package)} · 物体：${esc(clip.object)} · 类型：${esc(INTER_LABELS[clip.interaction_type] || clip.interaction_type)} · 帧数：${clip.frames ?? "—"}
+        Package: ${esc(clip.package)} · Object: ${esc(clip.object)} · Type: ${esc(INTER_LABELS[clip.interaction_type] || clip.interaction_type)} · Frames: ${clip.frames ?? "—"}
       </div>
     </div>
     <div class="table-wrap">
       <table class="rt-table compact-table">
         <thead>
           <tr>
-            <th class="left">策略</th>
-            <th>判定</th>
-            <th>单集得分</th>
-            <th>质量分</th>
-            <th>位置误差 m (均/终)</th>
-            <th>姿态误差 rad (均/终)</th>
-            <th>接触召回</th>
+            <th class="left">Policy</th>
+            <th>Status</th>
+            <th>Episode Score</th>
+            <th>Quality</th>
+            <th>Rel Pos Err m (Mean/Final)</th>
+            <th>Rel Ori Err rad (Mean/Final)</th>
+            <th>Contact Recall</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
@@ -642,7 +643,7 @@ function renderVideos() {
 
   const chipsEl = document.getElementById("video-filter-chips");
   chipsEl.innerHTML =
-    `<button class="chip ${state.videoObj === "all" ? "active" : ""}" data-vobj="all">全部 (${vids.length})</button>` +
+    `<button class="chip ${state.videoObj === "all" ? "active" : ""}" data-vobj="all">All (${vids.length})</button>` +
     objs.map((o) => `<button class="chip ${state.videoObj === o ? "active" : ""}" data-vobj="${esc(o)}">${esc(o)}</button>`).join("");
   chipsEl.querySelectorAll(".chip").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -680,13 +681,13 @@ function renderVideos() {
           <div class="clip-row-tags">
             <span class="tag-pill">${esc(v.object)}</span>
             <span class="tag-pill">${esc(INTER_LABELS[v.interaction_type] || v.interaction_type)}</span>
-            <span class="tag-pill ${v.success ? "tag-green" : "tag-coral"}">${v.success ? `得分 ${fmtNum(v.episode_score, 1)}` : "失败 (0)"}</span>
+            <span class="tag-pill ${v.success ? "tag-green" : "tag-coral"}">${v.success ? `Score ${fmtNum(v.episode_score, 1)}` : "Fail (0)"}</span>
           </div>
           <div class="video-meta">
             <span class="mono">${esc(pName(v.policy_id))}</span>
-            <span>均误 ${v.obj_pos_err_mean != null ? `${fmtNum(v.obj_pos_err_mean, 3)} m` : "—"}</span>
+            <span>Mean pos err ${v.obj_pos_err_mean != null ? `${fmtNum(v.obj_pos_err_mean, 3)} m` : "—"}</span>
           </div>
-          <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="${esc(v.policy_id)}">查看该片段诊断 →</button>
+          <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="${esc(v.policy_id)}">Inspect Diagnostics →</button>
         </div>
       </div>
     `
@@ -704,8 +705,9 @@ function renderRegistry() {
   document.getElementById("registry-table").innerHTML = `
     <thead>
       <tr>
-        <th class="left">策略 ID</th>
-        <th class="left">模态</th>
+        <th class="left">Policy</th>
+        <th class="left">Modality</th>
+        <th>Added</th>
         <th>Backend</th>
         <th class="left">ONNX SHA256</th>
       </tr>
@@ -717,6 +719,7 @@ function renderRegistry() {
         <tr>
           <td class="left mono" style="font-weight:600;">${esc(p.label || p.id)}</td>
           <td class="left">${esc(p.modality)}</td>
+          <td class="mono" style="color:var(--muted);">${esc(p.added_date || "—")}</td>
           <td><span class="tag-pill">${esc(p.backend)}${p.reference_mode ? ` · ${esc(p.reference_mode)}` : ""}</span></td>
           <td class="left mono" style="color:var(--muted);word-break:break-all;">${esc(p.sha256 || "—")}</td>
         </tr>
@@ -733,6 +736,22 @@ function renderRegistry() {
   `;
 }
 
+/* 8. News */
+function renderNews() {
+  const items = state.siteData.news || [];
+  document.getElementById("news-list").innerHTML = items
+    .map(
+      (n) => `
+      <li class="news-item">
+        <span class="news-date">${esc(n.date)}</span>
+        <span><span class="tag-pill ${n.tag === "Policies Added" ? "tag-green" : "tag-blue"}">${esc(n.tag)}</span></span>
+        <span class="news-text">${esc(n.text)}</span>
+      </li>
+    `
+    )
+    .join("");
+}
+
 init().catch((err) => {
-  document.getElementById("setting-desc").textContent = `加载失败：${err.message}`;
+  document.getElementById("setting-desc").textContent = `Load error: ${err.message}`;
 });

@@ -4,38 +4,38 @@
   "physics_dt_ms": 2,
   "friction": 1.0,
   "primary_metric": "mpjpe_xy_aligned_mm",
-  "description": "BFM Benchmark 在人形机器人统一物理协议（Protocol v2）下评估全身动作跟踪策略。策略在独立进程运行，每物理步重算 PD 力矩并做饱和限幅，输出完整轨迹、全程指标、失败前缀指标及独立复算凭据。",
-  "scoring_summary": "主排序指标为仅去除骨盆 XY 平移后的全程身体位置误差 MPBPE（单位 mm，越低越好），保留偏航角与高度误差。失败判定遵循 SuperMimic Appendix A：相对参考骨盆高度差 > 0.25 m 或单位重力投影 Z 差 > 0.8（末端偏差不作失败条件）。",
+  "description": "BFM Benchmark evaluates humanoid whole-body motion-tracking policies under a unified physics protocol (Protocol v2). Policies run in isolated worker processes, PD torques are recomputed and saturated at every physics step, and full traces are independently verified.",
+  "scoring_summary": "The primary ranking metric is full-motion MPBPE with pelvis XY translation alignment only (mm, lower is better), retaining yaw and height errors. Failure rules follow SuperMimic Appendix A: root height difference > 0.25 m or projected unit-gravity Z difference > 0.8 (end-effector deviation is not a failure condition).",
   "alignment_modes": [
     {
       "field": "mpjpe_xy_aligned_m",
-      "label": "XY 对齐（主排名指标）",
-      "transform": "每帧仅对齐实际与参考骨盆 XY 平移",
-      "retained": "偏航角（Yaw）、高度、倾角与全身关节姿态误差"
+      "label": "XY Aligned (Primary)",
+      "transform": "Center actual and reference root XY translation per frame",
+      "retained": "Yaw heading, height, tilt, and articulated body pose"
     },
     {
       "field": "mpjpe_xy_yaw_aligned_m",
-      "label": "XY + Yaw 对齐",
-      "transform": "对齐骨盆 XY 平移与最近世界 Z 轴旋转",
-      "retained": "高度、倾角与全身关节姿态误差（退化样本计入 yaw_alignment_degenerate_fraction）"
+      "label": "XY + Yaw Aligned",
+      "transform": "Center root XY and align closest world-Z heading rotation",
+      "retained": "Height, tilt, and articulated pose (degenerate frames reported via yaw_alignment_degenerate_fraction)"
     },
     {
       "field": "mpjpe_world_m",
-      "label": "世界坐标系（无对齐）",
-      "transform": "无任何空间对齐（含初始帧）",
-      "retained": "全局轨迹漂移与全身姿态误差"
+      "label": "World Frame (Unaligned)",
+      "transform": "No spatial alignment (including initial frame)",
+      "retained": "Global trajectory drift and full-body pose"
     }
   ],
   "suites": [
     {
       "id": "lafan-g1-29dof",
-      "name": "G1 · LAFAN1 (40 条)",
+      "name": "G1 · LAFAN1 (40 Clips)",
       "robot": "Unitree G1 (29 DoF)",
       "mjcf": "robots/g1-29dof-cpu-v0.xml",
       "clips": 40,
       "source_fps": 30,
       "physics_dt": "2 ms",
-      "status": "待导入 motionchallenge-verify 正式成绩",
+      "status": "Awaiting motionchallenge-verify results",
       "policies_supported": "SuperMimic (40k CPU FP32) / PartyMimic G1 MLP",
       "leaderboard": []
     },
@@ -47,9 +47,26 @@
       "clips": 1,
       "source_fps": 50,
       "physics_dt": "2 ms",
-      "status": "单条接入验证用例（无物体本体协议）",
-      "policies_supported": "参考 PD 夹具 / Roban PartyMimic ONNX",
+      "status": "Single-clip onboarding validation",
+      "policies_supported": "Reference PD fixture / Roban PartyMimic ONNX",
       "leaderboard": []
+    }
+  ],
+  "news": [
+    {
+      "date": "2026-11-20",
+      "tag": "Portal",
+      "text": "Integrated BFM track into BFM BenchMark | Leaderboard 0.1 with Protocol v2 documentation and suite views."
+    },
+    {
+      "date": "2026-11-18",
+      "tag": "Suite & Adapter",
+      "text": "Added Roban S17 21-DoF MJCF profile, single-clip validation suite, and PartyMimic adapters (G1 & Roban S17)."
+    },
+    {
+      "date": "2026-11-15",
+      "tag": "Baseline Ready",
+      "text": "Initialized BFM Protocol v2 evaluator on MuJoCo 3.17.0 with Unitree G1 29-DoF LAFAN1 (40 clips) and SuperMimic adapter."
     }
   ]
 }

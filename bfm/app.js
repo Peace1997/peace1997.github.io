@@ -8,7 +8,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "
 
 async function init() {
   const res = await fetch("data/bfm_data.json");
-  if (!res.ok) throw new Error("无法加载 data/bfm_data.json");
+  if (!res.ok) throw new Error("Failed to load data/bfm_data.json");
   state.data = await res.json();
   state.suiteId = state.data.suites[0].id;
 
@@ -19,6 +19,7 @@ async function init() {
   renderRanking();
   renderAlignmentTable();
   renderSuitesTable();
+  renderNews();
 }
 
 function currentSuite() {
@@ -57,10 +58,10 @@ function renderSetting() {
   document.getElementById("bfm-desc").textContent = d.description;
   document.getElementById("bfm-scoring").textContent = d.scoring_summary;
   document.getElementById("bfm-meta").innerHTML = `
-    <div><div class="meta-item-k">仿真引擎</div><div class="meta-item-v">${esc(d.engine)}</div></div>
-    <div><div class="meta-item-k">物理步长与摩擦</div><div class="meta-item-v">${d.physics_dt_ms} ms · 摩擦 ${d.friction.toFixed(1)}</div></div>
-    <div><div class="meta-item-k">主排序指标</div><div class="meta-item-v">XY 对齐全程 MPBPE (mm ↓)</div></div>
-    <div><div class="meta-item-k">独立核验</div><div class="meta-item-v mono">motionchallenge-verify</div></div>
+    <div><div class="meta-item-k">Physics Engine</div><div class="meta-item-v">${esc(d.engine)}</div></div>
+    <div><div class="meta-item-k">Timestep &amp; Friction</div><div class="meta-item-v">${d.physics_dt_ms} ms · friction ${d.friction.toFixed(1)}</div></div>
+    <div><div class="meta-item-k">Primary Metric</div><div class="meta-item-v">XY-Aligned MPBPE (mm ↓)</div></div>
+    <div><div class="meta-item-k">Verification</div><div class="meta-item-v mono">motionchallenge-verify</div></div>
   `;
 }
 
@@ -82,19 +83,19 @@ function renderRanking() {
   const suite = currentSuite();
   document.getElementById("bfm-rank-heading").textContent = `Overall Ranking · ${suite.name}`;
   document.getElementById("bfm-rank-sub").textContent =
-    `机体：${suite.robot} · 动作数：${suite.clips} 条（${suite.source_fps} FPS）· 步长：${suite.physics_dt} · 已适配：${suite.policies_supported}`;
+    `Robot: ${suite.robot} · Clips: ${suite.clips} (${suite.source_fps} FPS) · Physics dt: ${suite.physics_dt} · Adapters: ${suite.policies_supported}`;
 
   const hl = (k) => (state.sortBy === k ? "col-hl" : "");
   const thead = `
     <thead>
       <tr>
-        <th style="width:64px;">Rank</th>
-        <th class="left">策略（Policy）</th>
+        <th style="width:60px;">Rank</th>
+        <th class="left">Policy</th>
         <th class="${hl("mpjpe_xy_aligned_mm")}">MPBPE · XY (mm ↓)</th>
         <th class="${hl("mpjpe_xy_yaw_aligned_mm")}">MPBPE · XY+Yaw (mm ↓)</th>
-        <th class="${hl("mpjpe_world_mm")}">MPBPE · 世界系 (mm ↓)</th>
-        <th class="${hl("success_rate")}">成功率 (↑)</th>
-        <th>核验状态</th>
+        <th class="${hl("mpjpe_world_mm")}">MPBPE · World (mm ↓)</th>
+        <th class="${hl("success_rate")}">Success Rate (↑)</th>
+        <th>Added</th>
       </tr>
     </thead>
   `;
@@ -106,8 +107,8 @@ function renderRanking() {
       <tbody>
         <tr>
           <td colspan="7" class="empty-msg">
-            当前套件（<strong>${esc(suite.id)}</strong>）尚未导入正式跑批结果。<br />
-            完成 <code>bfm-benchmark</code> 全量评测并通过 <code>motionchallenge-verify</code> 后，将 <code>result.json</code> 写入 <code>bfm/data/bfm_data.json</code> 即可自动发榜（严禁展示未经核验的占位数字）。
+            No verified full-suite results imported yet for <strong>${esc(suite.id)}</strong>.<br />
+            Run <code>bfm-benchmark</code> and verify via <code>motionchallenge-verify</code>, then import <code>result.json</code> into <code>bfm/data/bfm_data.json</code>.
           </td>
         </tr>
       </tbody>
@@ -130,7 +131,7 @@ function renderRanking() {
         <td class="${hl("mpjpe_xy_yaw_aligned_mm")}">${Number(r.mpjpe_xy_yaw_aligned_mm).toFixed(2)}</td>
         <td class="${hl("mpjpe_world_mm")}">${Number(r.mpjpe_world_mm).toFixed(2)}</td>
         <td class="${hl("success_rate")}">${(r.success_rate * 100).toFixed(2)}%</td>
-        <td><span class="tag-pill tag-green">${esc(r.verified ? "已复算核验" : "待复算")}</span></td>
+        <td class="mono" style="color:var(--muted);">${esc(r.added_date || "—")}</td>
       </tr>
     `)
     .join("");
@@ -141,10 +142,10 @@ function renderAlignmentTable() {
   document.getElementById("bfm-align-table").innerHTML = `
     <thead>
       <tr>
-        <th class="left">结果字段</th>
-        <th class="left">对齐模式</th>
-        <th class="left">空间变换</th>
-        <th class="left">保留误差项</th>
+        <th class="left">Result Field</th>
+        <th class="left">Alignment Mode</th>
+        <th class="left">Transform</th>
+        <th class="left">Errors Retained</th>
       </tr>
     </thead>
     <tbody>
@@ -169,11 +170,11 @@ function renderSuitesTable() {
     <thead>
       <tr>
         <th class="left">Suite ID</th>
-        <th class="left">机器人模型</th>
-        <th>动作条数</th>
-        <th>源帧率</th>
-        <th class="left">MJCF 资产</th>
-        <th class="left">当前状态</th>
+        <th class="left">Robot</th>
+        <th>Clips</th>
+        <th>Source FPS</th>
+        <th class="left">MJCF Asset</th>
+        <th class="left">Status</th>
       </tr>
     </thead>
     <tbody>
@@ -195,6 +196,21 @@ function renderSuitesTable() {
   `;
 }
 
+function renderNews() {
+  const items = state.data.news || [];
+  document.getElementById("bfm-news-list").innerHTML = items
+    .map(
+      (n) => `
+      <li class="news-item">
+        <span class="news-date">${esc(n.date)}</span>
+        <span><span class="tag-pill tag-blue">${esc(n.tag)}</span></span>
+        <span class="news-text">${esc(n.text)}</span>
+      </li>
+    `
+    )
+    .join("");
+}
+
 init().catch((err) => {
-  document.getElementById("bfm-desc").textContent = `加载失败：${err.message}`;
+  document.getElementById("bfm-desc").textContent = `Load error: ${err.message}`;
 });
