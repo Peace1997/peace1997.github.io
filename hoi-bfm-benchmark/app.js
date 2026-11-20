@@ -74,7 +74,11 @@ function ds() {
 }
 
 function pMeta(pid) {
-  return state.siteData.policies[pid] || { id: pid, modality: "", modality_tag: "depth", backend: "" };
+  return state.siteData.policies[pid] || { id: pid, label: pid, modality: "", modality_tag: "depth", backend: "" };
+}
+
+function pName(pid) {
+  return pMeta(pid).label || pid;
 }
 
 function restoreFromHash() {
@@ -314,7 +318,7 @@ function renderRanking() {
             <tr>
               <td>${rankCell}</td>
               <td class="left">
-                <button class="method-btn" data-drill-p="${esc(r.policy_id)}">${esc(r.policy_id)}</button>
+                <button class="method-btn" data-drill-p="${esc(r.policy_id)}">${esc(pName(r.policy_id))}</button>
                 <span class="sub-val">${esc(pm.modality)}</span>
               </td>
               <td><span class="tag-pill ${pm.modality_tag === "depth" ? "tag-blue" : ""}">${esc(MOD_BADGE[pm.modality_tag] || pm.modality_tag)}</span></td>
@@ -353,7 +357,7 @@ function renderObjectTable() {
     <thead>
       <tr>
         <th class="left">物体类别（条数）</th>
-        ${rows.map((r) => `<th class="mono">${esc(r.policy_id)}</th>`).join("")}
+        ${rows.map((r) => `<th class="mono">${esc(pName(r.policy_id))}</th>`).join("")}
       </tr>
     </thead>
   `;
@@ -418,7 +422,7 @@ function renderFailureTable() {
         .join("");
       return `
         <tr>
-          <td class="left"><button class="method-btn" data-fpol="${esc(r.policy_id)}" data-ftag="failed">${esc(r.policy_id)}</button></td>
+          <td class="left"><button class="method-btn" data-fpol="${esc(r.policy_id)}" data-ftag="failed">${esc(pName(r.policy_id))}</button></td>
           <td class="cell-click" data-fpol="${esc(r.policy_id)}" data-ftag="failed"><strong>${failN}</strong> <span style="color:var(--muted);">/ ${r.n}</span></td>
           ${cells}
         </tr>
@@ -450,9 +454,9 @@ function populateClipFilters() {
 
   document.getElementById("clip-policy-filter").innerHTML =
     `<option value="all">全部策略</option>` +
-    pids.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
+    pids.map((p) => `<option value="${esc(p)}">${esc(pName(p))}</option>`).join("");
 
-  const opts = pids.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
+  const opts = pids.map((p) => `<option value="${esc(p)}">${esc(pName(p))}</option>`).join("");
   document.getElementById("diff-policy-a").innerHTML = opts;
   document.getElementById("diff-policy-b").innerHTML = opts;
   if (!state.clipFilters.diffA && pids.length) state.clipFilters.diffA = pids[0];
@@ -574,7 +578,7 @@ function renderClipDetail(clip) {
       const contact = r.contact_exempt ? "豁免" : r.contact_recall != null ? fmtPct(r.contact_recall) : "—";
       return `
         <tr class="${hl}">
-          <td class="left mono" style="font-weight:600;">${esc(pid)}${hasVid ? ` <span class="tag-pill tag-blue">视频</span>` : ""}</td>
+          <td class="left mono" style="font-weight:600;">${esc(pName(pid))}${hasVid ? ` <span class="tag-pill tag-blue">视频</span>` : ""}</td>
           <td>${badge}</td>
           <td><strong>${fmtNum(r.episode_score, 2)}</strong></td>
           <td>${fmtNum(r.quality_score, 2)}</td>
@@ -591,7 +595,7 @@ function renderClipDetail(clip) {
     vidHtml = `
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <strong style="font-size:13px;">Ghost 叠影回放（策略：<span class="mono">${esc(matchedVid.policy_id)}</span>）</strong>
+          <strong style="font-size:13px;">Ghost 叠影回放（策略：<span class="mono">${esc(pName(matchedVid.policy_id))}</span>）</strong>
           <span class="tag-pill tag-blue">${matchedVid.size_mb} MB</span>
         </div>
         <video controls preload="metadata" poster="${esc(matchedVid.poster_url || "")}" style="width:100%;max-height:340px;border-radius:8px;background:#0f172a;">
@@ -600,7 +604,7 @@ function renderClipDetail(clip) {
       </div>
     `;
   } else if (clipVids.length && state.highlightPolicy) {
-    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">当前策略 <code>${esc(state.highlightPolicy)}</code> 未录制视频（已录制：${clipVids.map((v) => v.policy_id).join(", ")}）。</div>`;
+    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">当前策略 <code>${esc(pName(state.highlightPolicy))}</code> 未录制视频（已录制：${clipVids.map((v) => pName(v.policy_id)).join(", ")}）。</div>`;
   }
 
   el.innerHTML = `
@@ -679,7 +683,7 @@ function renderVideos() {
             <span class="tag-pill ${v.success ? "tag-green" : "tag-coral"}">${v.success ? `得分 ${fmtNum(v.episode_score, 1)}` : "失败 (0)"}</span>
           </div>
           <div class="video-meta">
-            <span class="mono">${esc(v.policy_id)}</span>
+            <span class="mono">${esc(pName(v.policy_id))}</span>
             <span>均误 ${v.obj_pos_err_mean != null ? `${fmtNum(v.obj_pos_err_mean, 3)} m` : "—"}</span>
           </div>
           <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="${esc(v.policy_id)}">查看该片段诊断 →</button>
@@ -711,7 +715,7 @@ function renderRegistry() {
         .map(
           (p) => `
         <tr>
-          <td class="left mono" style="font-weight:600;">${esc(p.id)}</td>
+          <td class="left mono" style="font-weight:600;">${esc(p.label || p.id)}</td>
           <td class="left">${esc(p.modality)}</td>
           <td><span class="tag-pill">${esc(p.backend)}${p.reference_mode ? ` · ${esc(p.reference_mode)}` : ""}</span></td>
           <td class="left mono" style="color:var(--muted);word-break:break-all;">${esc(p.sha256 || "—")}</td>

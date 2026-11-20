@@ -2,7 +2,7 @@
   "fingerprint": {
     "metric_standard": "hoi-bfm-official-2026-11-11",
     "eval_commit": "5748ac3489eb",
-    "exported_at": "2026-11-20T10:13:13+08:00",
+    "exported_at": "2026-11-20T10:31:08+08:00",
     "registry_sha256": "2f84d68221ac241bc9b3c0aec13898d776d0ceb0bbdbaaa8e7abf96e55846236",
     "dataset_clipset_sha256": {
       "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
@@ -23,9 +23,9 @@
   "policies": {
     "amp_a_s43_raw": {
       "id": "amp_a_s43_raw",
-      "label": "amp_a_s43_raw",
+      "label": "hsw_amp_a_s43_raw",
       "group": "HSW Depth",
-      "modality": "深度 + 本体（图内参考 raw_trajectory_v1）",
+      "modality": "深度（图内参考）",
       "modality_tag": "depth",
       "backend": "hsw_depth_onnx",
       "reference_mode": "raw_trajectory_v1",
@@ -40,7 +40,7 @@
       "id": "clf_hoi_20261104",
       "label": "clf_hoi_20261104",
       "group": "CLF Depth",
-      "modality": "缓存深度 + 本体（Final-Student）",
+      "modality": "深度 + 本体",
       "modality_tag": "depth",
       "backend": "final_student_onnx",
       "reference_mode": null,
@@ -55,7 +55,7 @@
       "id": "hsw_hoi_20261108",
       "label": "hsw_hoi_20261108",
       "group": "HSW RGB",
-      "modality": "RGB + 本体（RGB-Student）",
+      "modality": "RGB + 本体",
       "modality_tag": "rgb",
       "backend": "rgb_onnx",
       "reference_mode": null,
@@ -68,9 +68,9 @@
     },
     "scalebfm_oa_s42_raw": {
       "id": "scalebfm_oa_s42_raw",
-      "label": "scalebfm_oa_s42_raw",
+      "label": "hsw_scalebfm_oa_s42_raw",
       "group": "HSW Depth",
-      "modality": "深度 + 本体（图内参考 raw_trajectory_v1）",
+      "modality": "深度（图内参考）",
       "modality_tag": "depth",
       "backend": "hsw_depth_onnx",
       "reference_mode": "raw_trajectory_v1",
@@ -85,7 +85,7 @@
       "id": "zl_v63_prop_20261105",
       "label": "zl_v63_prop_20261105",
       "group": "ZL Proprio",
-      "modality": "纯本体（Proprioceptive）",
+      "modality": "纯本体",
       "modality_tag": "proprio",
       "backend": "onnx_l0",
       "reference_mode": null,
@@ -100,7 +100,7 @@
       "id": "zl_v92_20261108",
       "label": "zl_v92_20261108",
       "group": "ZL Depth",
-      "modality": "深度 + 本体（循环隐状态）",
+      "modality": "深度 + 本体",
       "modality_tag": "depth",
       "backend": "depth_onnx",
       "reference_mode": null,
@@ -2757,7 +2757,7 @@
         }
       ],
       "featured_video": {
-        "title": "amp_a_s43_raw · 6 场景 2×3 精华合集（Ghost 参考叠影）",
+        "title": "hsw_amp_a_s43_raw · 6 场景 2×3 并排展示（黄色虚影为参考轨迹）",
         "policy_id": "amp_a_s43_raw",
         "video_url": "media/clean_218/hsw_amp_a_s43_raw_6scenes_2x3.mp4",
         "poster_url": "media/clean_218/preview_grid_mid.png",
