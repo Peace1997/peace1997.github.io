@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>BFM BenchMark · Leaderboard 0.1</title>
+  <link rel="stylesheet" href="styles.css?v=20261120104818" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../">
+        <span class="brand-logo">BFM BenchMark</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Leaderboard 0.1</span>
+      </a>
+      <nav class="topnav" aria-label="Track Navigation">
+        <a href="../">Home</a>
+        <a href="../bfm/">BFM</a>
+        <a href="./" class="nav-active">HOI-BFM</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <aside class="sidebar" aria-label="On This Page">
+      <div class="sidebar-title">ON THIS PAGE</div>
+      <ul class="toc" id="toc-list">
+        <li><a href="#setting" class="active">Setting</a></li>
+        <li><a href="#ranking">Overall Ranking</a></li>
+        <li><a href="#per-object">Per-Object</a></li>
+        <li><a href="#failures">Failure Analysis</a></li>
+        <li><a href="#clips">Per-Clip Diagnostics</a></li>
+        <li><a href="#videos">Ghost Replays</a></li>
+        <li><a href="#repro">Policies &amp; Fingerprint</a></li>
+        <li><a href="#news">News</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <!-- 1. Benchmark Setting -->
+      <section id="setting" class="section-card">
+        <h2 class="sec-h2">Benchmark Setting</h2>
+        <p class="setting-desc" id="setting-desc">Loading benchmark metadata…</p>
+
+        <div class="policy-box">
+          <div class="policy-box-title">SCORING SUMMARY · hoi-bfm-official-2026-11-11</div>
+          <ul class="summary-points" id="scoring-summary"></ul>
+          <details class="inline-details">
+            <summary>Show full protocol &amp; threshold tables</summary>
+            <div id="scoring-details" class="details-body"></div>
+          </details>
+        </div>
+
+        <div class="meta-strip" id="meta-strip"></div>
+      </section>
+
+      <!-- 2. Overall Ranking -->
+      <section id="ranking" class="section-card">
+        <div class="control-bar">
+          <div class="ctrl-group">
+            <span class="ctrl-label">Rank by</span>
+            <div class="chip-row" id="sort-chips">
+              <button class="chip active" data-sort="total_score">Total Score</button>
+              <button class="chip" data-sort="sr">Success Rate</button>
+              <button class="chip" data-sort="hand_all">Hand Interaction (79)</button>
+              <button class="chip" data-sort="foot_only">Foot-Only (139)</button>
+              <button class="chip" data-sort="quality">Quality (Succ)</button>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-label">Modality</span>
+            <div class="chip-row" id="modality-chips">
+              <button class="chip active" data-mod="all">All</button>
+              <button class="chip" data-mod="depth">Depth</button>
+              <button class="chip" data-mod="rgb">RGB</button>
+              <button class="chip" data-mod="proprio">Proprio</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-line">
+          <span id="rank-count"></span>
+          <span id="rank-sort-hint"></span>
+        </div>
+        <div class="spec-line" id="rank-spec-line"></div>
+
+        <div class="board-head">
+          <h2 class="sec-h2" id="rank-heading">Overall Ranking · Total Score</h2>
+          <span class="updated-meta" id="rank-updated"></span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table" id="ranking-table"></table>
+        </div>
+      </section>
+
+      <!-- 3. Per-Object Breakdown -->
+      <section id="per-object" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Per-Object Results</h2>
+            <p class="sec-sub">Best per row is highlighted in green; click any cell to drill down into matching clips</p>
+          </div>
+          <div class="control-inline">
+            <div class="chip-row" id="obj-scope-chips">
+              <button class="chip active" data-scope="all">All Clips (218)</button>
+              <button class="chip" data-scope="hand">Hand Only (79)</button>
+            </div>
+            <div class="chip-row" id="obj-metric-chips">
+              <button class="chip active" data-metric="total_score">Total Score</button>
+              <button class="chip" data-metric="sr">Success Rate</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table per-obj-table" id="object-table"></table>
+        </div>
+      </section>
+
+      <!-- 4. Failure Breakdown -->
+      <section id="failures" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Failure Analysis (218 Clips)</h2>
+            <p class="sec-sub">Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect clips</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="rt-table" id="failure-table"></table>
+        </div>
+      </section>
+
+      <!-- 5. Per-Clip Diagnostics -->
+      <section id="clips" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Per-Clip Diagnostics</h2>
+            <p class="sec-sub">Filter all 218 clips by object, interaction type, policy failure tag, or A/B policy disagreement</p>
+          </div>
+          <button class="btn-subtle" id="clip-reset-btn" type="button">Reset Filters</button>
+        </div>
+
+        <div class="clip-controls">
+          <input type="search" id="clip-search" class="input" placeholder="Search clip ID or object…" />
+          <select id="clip-object-filter" class="select"></select>
+          <select id="clip-inter-filter" class="select"></select>
+          <select id="clip-policy-filter" class="select"></select>
+          <select id="clip-fail-filter" class="select">
+            <option value="all">All outcomes / reasons</option>
+            <option value="failed">Failed only</option>
+            <option value="succeeded">Succeeded only</option>
+            <option value="drop">Has drop</option>
+            <option value="contact_recall">Has contact_recall</option>
+            <option value="incomplete">Has incomplete</option>
+            <option value="body_z">Has body_z</option>
+            <option value="root_ori">Has root_ori</option>
+          </select>
+        </div>
+
+        <div class="diff-strip">
+          <span class="ctrl-label">A / B Diff</span>
+          <select id="diff-policy-a" class="select select-sm"></select>
+          <select id="diff-mode" class="select select-sm">
+            <option value="off">Diff disabled</option>
+            <option value="a_win_b_lose">A passes &amp; B fails</option>
+            <option value="a_lose_b_win">A fails &amp; B passes</option>
+            <option value="disagree">A and B disagree</option>
+          </select>
+          <select id="diff-policy-b" class="select select-sm"></select>
+        </div>
+
+        <div class="clips-grid">
+          <div class="clip-list-box">
+            <div class="clip-list-head" id="clip-count">Loading…</div>
+            <div class="clip-list" id="clip-list" role="listbox"></div>
+          </div>
+          <div class="clip-detail-box" id="clip-detail">
+            <div class="empty-msg">Select a clip on the left to inspect cross-policy diagnostics</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Ghost Replay Videos -->
+      <section id="videos" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Ghost Replays</h2>
+            <p class="sec-sub">Translucent yellow overlay shows reference motion &amp; object; curated representative clips (not exhaustive)</p>
+          </div>
+          <div class="chip-row" id="video-filter-chips"></div>
+        </div>
+
+        <div id="videos-featured"></div>
+        <div class="video-grid" id="videos-grid"></div>
+      </section>
+
+      <!-- 7. Policy Registry & Fingerprint -->
+      <section id="repro" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">Policies &amp; Snapshot Fingerprint</h2>
+            <p class="sec-sub">Weights are kept out of Git; SHA256 digests are verified from closed-loop run manifests</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="rt-table compact-table" id="registry-table"></table>
+        </div>
+        <div class="fp-footer mono" id="fp-footer"></div>
+      </section>
+
+      <!-- 8. News / Policy Onboarding Log -->
+      <section id="news" class="section-card">
+        <div class="board-head">
+          <div>
+            <h2 class="sec-h2">News</h2>
+            <p class="sec-sub">Timeline of policy onboarding, benchmark updates, and metric standard revisions</p>
+          </div>
+        </div>
+        <ul class="news-list" id="news-list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js?v=20261120104818"></script>
+</body>
+</html>

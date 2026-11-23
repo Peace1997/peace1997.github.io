@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="description" content="BFM BenchMark · Leaderboard 0.1 — Unified Humanoid BFM & HOI-BFM Evaluation" />
+  <title>BFM BenchMark · Leaderboard 0.1</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --subtle: #f5f6f7;
+      --border: #dee0e3;
+      --border-light: #eff0f1;
+      --text: #1f2329;
+      --text-2: #646a73;
+      --muted: #8f959e;
+      --accent: #3370ff;
+      --accent-bg: #ebf2fe;
+      --green: #2e7d4a;
+      --green-bg: #e6f4ea;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: 12.5px; }
+    .topbar {
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-logo { font-size: 18px; font-weight: 600; }
+    .brand-sep { color: #d0d3d6; }
+    .brand-sub { font-size: 14px; font-weight: 500; color: var(--accent); }
+    .topnav { display: flex; align-items: center; gap: 8px; }
+    .topnav a {
+      text-decoration: none;
+      color: var(--text-2);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      transition: 0.15s;
+    }
+    .topnav a:hover { background: var(--subtle); color: var(--text); }
+    .topnav a.nav-active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 44px 24px 64px;
+    }
+    .hero { margin-bottom: 28px; }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 14.5px;
+    }
+
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .track-card, .news-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+    .track-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .track-card:hover {
+      border-color: #9bb8ff;
+      box-shadow: 0 4px 16px rgba(51, 112, 255, 0.06);
+    }
+    .track-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .track-title { margin: 0; font-size: 18px; font-weight: 600; }
+    .badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-blue { background: var(--accent-bg); color: var(--accent); }
+
+    .track-desc {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+    .track-foot {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .btn-primary {
+      display: inline-block;
+      text-decoration: none;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid #c5d9fb;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 7px;
+      transition: 0.15s;
+    }
+    .btn-primary:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .news-card h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .news-sub {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .news-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .news-item {
+      display: grid;
+      grid-template-columns: 100px 116px minmax(0, 1fr);
+      align-items: baseline;
+      gap: 12px;
+      padding: 10px 2px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 13.5px;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-date { color: var(--muted); }
+    .news-item code {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 12.5px;
+      background: #f2f3f5;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    footer {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12.5px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    footer a { color: var(--text-2); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 760px) {
+      .track-grid { grid-template-columns: 1fr; }
+      .news-item { grid-template-columns: 1fr; gap: 4px; }
+      .brand-sep, .brand-sub { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <span class="brand-logo">BFM BenchMark</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Leaderboard 0.1</span>
+      </a>
+      <nav class="topnav" aria-label="Track Navigation">
+        <a href="./" class="nav-active">Home</a>
+        <a href="./bfm/">BFM</a>
+        <a href="./hoi-bfm-benchmark/">HOI-BFM</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Humanoid Foundation Model Benchmark</h1>
+      <p>Independent evaluation leaderboards for whole-body motion tracking (BFM) and human-object interaction (HOI-BFM).</p>
+    </div>
+
+    <div class="track-grid">
+      <article class="track-card">
+        <div>
+          <div class="track-head">
+            <h2 class="track-title">BFM · Whole-Body Motion Tracking</h2>
+            <span class="badge badge-blue">Protocol v2 Ready</span>
+          </div>
+          <p class="track-desc">Standardized physics evaluation for humanoid motion-tracking policies across robots, measuring tracking accuracy and stability.</p>
+        </div>
+        <div class="track-foot">
+          <a class="btn-primary" href="./bfm/">Open BFM Track →</a>
+        </div>
+      </article>
+
+      <article class="track-card">
+        <div>
+          <div class="track-head">
+            <h2 class="track-title">HOI-BFM · Human-Object Interaction</h2>
+            <span class="badge badge-green">Live · 6 Policies</span>
+          </div>
+          <p class="track-desc">Closed-loop simulation benchmark for lifting, pushing, and coordinated whole-body object manipulation with per-clip diagnostics and ghost replays.</p>
+        </div>
+        <div class="track-foot">
+          <a class="btn-primary" href="./hoi-bfm-benchmark/">Open HOI-BFM Track →</a>
+        </div>
+      </article>
+    </div>
+
+    <section class="news-card" id="news">
+      <h2>News</h2>
+      <p class="news-sub">Policy onboarding log and benchmark release history</p>
+      <ul class="news-list">
+        <li class="news-item">
+          <span class="news-date mono">2026-11-20</span>
+          <span><span class="badge badge-blue">Portal</span></span>
+          <span>Launched <strong>BFM BenchMark | Leaderboard 0.1</strong> unifying BFM and HOI-BFM tracks.</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-19</span>
+          <span><span class="badge badge-green">Policies Added</span></span>
+          <span>Added <code>hsw_amp_a_s43_raw</code> and <code>hsw_scalebfm_oa_s42_raw</code> to HOI-BFM and re-evaluated all 6 policies on the 218-clip clean subset.</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-18</span>
+          <span><span class="badge badge-blue">BFM Track</span></span>
+          <span>Added Roban S17 21-DoF profile and PartyMimic adapter under BFM Protocol v2 alongside G1 LAFAN1 (40 clips).</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-11</span>
+          <span><span class="badge badge-blue">Standard</span></span>
+          <span>Finalized HOI-BFM official standard <code>hoi-bfm-official-2026-11-11</code> with real MuJoCo hand-object contact signals.</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-08</span>
+          <span><span class="badge badge-green">Policies Added</span></span>
+          <span>Onboarded <code>zl_v92_20261108</code> (Depth + Proprio) and <code>hsw_hoi_20261108</code> (RGB + Proprio) to HOI-BFM.</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-05</span>
+          <span><span class="badge badge-green">Policies Added</span></span>
+          <span>Onboarded <code>zl_v63_prop_20261105</code> (Proprioceptive) and <code>clf_hoi_20261104</code> (Depth + Proprio) to HOI-BFM.</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <span>BFM BenchMark · Leaderboard 0.1</span>
+  </footer>
+</body>
+</html>
