@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>BFM BenchMark · Leaderboard 0.1</title>
-  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261120v2" />
+  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261124" />
 </head>
 <body>
   <header class="topbar">
@@ -43,10 +43,10 @@
         <p class="setting-desc" id="bfm-desc"></p>
 
         <div class="policy-box">
-          <div class="policy-box-title">SCORING SUMMARY · Protocol v2 (MuJoCo 3.17.0)</div>
+          <div class="policy-box-title">SCORING SUMMARY · Protocol v2 &amp; Sim2Real-P0 (MuJoCo 3.17.0)</div>
           <ul class="summary-points" id="bfm-scoring"></ul>
           <details class="inline-details">
-            <summary>Show failure rules &amp; protocol table</summary>
+            <summary>Show failure rules &amp; Sim2Real-P0 protocol table</summary>
             <div id="bfm-details" class="details-body"></div>
           </details>
         </div>
@@ -56,28 +56,43 @@
 
       <!-- 2. Overall Ranking -->
       <section id="ranking" class="section-card">
+        <div class="proto-bar" id="bfm-proto-bar">
+          <span class="ctrl-label">Protocol</span>
+          <div class="chip-row" id="bfm-proto-chips"></div>
+        </div>
+
         <div class="control-bar">
           <div class="ctrl-group">
             <span class="ctrl-label">Suite</span>
             <div class="chip-row" id="bfm-suite-chips"></div>
           </div>
-          <div class="ctrl-group">
+          <div class="ctrl-group" id="bfm-sort-group">
             <span class="ctrl-label">Rank by</span>
             <div class="chip-row" id="bfm-sort-chips">
-              <button class="chip active" data-sort="mpjpe_xy_aligned_mm">MPBPE · XY (↓)</button>
-              <button class="chip" data-sort="mpjpe_xy_yaw_aligned_mm">MPBPE · XY+Yaw (↓)</button>
-              <button class="chip" data-sort="mpjpe_world_mm">MPBPE · World (↓)</button>
-              <button class="chip" data-sort="success_rate">Success Rate (↑)</button>
+              <button class="chip active" data-sort="success_rate">Success Rate (↑)</button>
+              <button class="chip" data-sort="completion">Completion (↑)</button>
+              <button class="chip" data-sort="mpjpe_xy_aligned_mm">Full XY (↓)</button>
+              <button class="chip" data-sort="prefix_xy_aligned_mm">Prefix XY (↓)</button>
+              <button class="chip" data-sort="mpjpe_xy_yaw_aligned_mm">XY+Yaw (↓)</button>
+              <button class="chip" data-sort="joint_mae_rad">Joint MAE (↓)</button>
             </div>
           </div>
+          <div class="ctrl-group" id="bfm-diag-group">
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none;">
+              <input type="checkbox" id="bfm-diag-toggle" />
+              Diagnostics (CI / Drift / Fails)
+            </label>
+          </div>
         </div>
+
+        <div class="spec-line" id="bfm-spec-line"></div>
 
         <div class="board-head">
           <div>
             <h2 class="sec-h2" id="bfm-rank-heading">Overall Ranking · BFM</h2>
             <p class="sec-sub" id="bfm-rank-sub"></p>
           </div>
-          <span class="tag-pill tag-blue">Protocol v2</span>
+          <span class="tag-pill tag-blue" id="bfm-proto-badge">Nominal v2</span>
         </div>
 
         <div class="table-wrap">
@@ -121,11 +136,13 @@
         </div>
         <div class="policy-box" style="margin-bottom:0;">
           <div class="policy-box-title">STANDARD EVALUATION COMMAND</div>
-          <pre class="mono" style="margin:6px 0 0;overflow-x:auto;color:var(--text);">uv run motionchallenge fetch-dataset --manifest suites/lafan/dataset.json --root /path/to/lafan
-uv run python evaluate.py --data /path/to/lafan --output /path/to/run_out
-uv run motionchallenge-verify --robot robots/g1-29dof-cpu-v0.json --suite suites/lafan/dataset.json \
-  --protocol suites/lafan/protocol.mujoco317-ideal-proprioception-none-v2.json \
-  --controller control.json --data /path/to/lafan --result /path/to/run_out/result.json</pre>
+          <pre class="mono" style="margin:6px 0 0;overflow-x:auto;color:var(--text);">uv run python evaluate.py --policy roban-partymimic --data suites/roban \
+  --weights /path/to/policy.onnx --output /path/to/run_nominal
+uv run python evaluate.py --policy roban-partymimic --roban-protocol sim2real-p0 \
+  --data suites/roban --weights /path/to/policy.onnx --output /path/to/run_p0
+uv run motionchallenge-verify --robot robots/roban-s17-21dof-cpu-v0.json --suite suites/roban/dataset.json \
+  --protocol suites/roban/protocol.mujoco317-ideal-proprioception-sim2real-p0-none-v1.json \
+  --controller suites/roban/runtime.json --data suites/roban --result /path/to/run_p0/result.json</pre>
         </div>
       </section>
 
@@ -142,6 +159,6 @@ uv run motionchallenge-verify --robot robots/g1-29dof-cpu-v0.json --suite suites
     </main>
   </div>
 
-  <script type="module" src="app.js?v=20261120v2"></script>
+  <script type="module" src="app.js?v=20261124"></script>
 </body>
 </html>

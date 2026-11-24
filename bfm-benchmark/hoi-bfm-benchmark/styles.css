@@ -659,6 +659,21 @@ strong { font-weight: 600; color: var(--text); }
   gap: 8px;
 }
 
+.proto-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+.d-ok { color: var(--green); font-weight: 600; }
+.d-mid { color: #b45309; font-weight: 600; }
+.d-bad { color: var(--coral); font-weight: 600; }
+.th-jump { cursor: pointer; }
+.th-jump:hover { color: var(--accent) !important; background: var(--accent-bg) !important; }
+
 /* News Timeline */
 .news-list {
   list-style: none;

@@ -2,7 +2,9 @@ const state = {
   siteData: null,
   clipsData: null,
   datasetId: "clean_218",
-  sortBy: "total_score",   // 'total_score' | 'sr' | 'hand_all' | 'foot_only' | 'quality'
+  protocolId: "overview",  // 'overview' | 'nominal-v1' | 'sim2real-p0-v1' | ...
+  ovMode: "both",          // 'both' | 'score' | 'sr'
+  sortBy: "total_score",   // 'total_score' | 'sr' | 'hand_all' | 'foot_only' | 'quality' | 'stability'
   modality: "all",         // 'all' | 'depth' | 'rgb' | 'proprio'
   objScope: "all",         // 'all' | 'hand'
   objMetric: "total_score",// 'total_score' | 'sr'
@@ -25,6 +27,13 @@ const fmtPct = (v) => (v == null ? "—" : `${(v * 100).toFixed(2)}%`);
 const fmtNum = (v, d = 2) => (v == null ? "—" : Number(v).toFixed(d));
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
+function fmtDelta(v, suf = "") {
+  if (v == null) return `<span style="color:var(--muted);">—</span>`;
+  const s = v > 0 ? "+" : "";
+  const c = v >= -0.5 ? "d-ok" : v >= -3.0 ? "d-mid" : "d-bad";
+  return `<span class="${c}">${s}${Number(v).toFixed(suf === "%" ? 1 : 2)}${suf}</span>`;
+}
+
 const INTER_LABELS = {
   hand_lift: "Hand Lift",
   hand_ground: "Hand Ground Push",
@@ -37,6 +46,7 @@ const SORT_META = {
   hand_all: { title: "Hand Interaction (79 Clips)", hint: "Ranked by Hand Interaction Score ↓" },
   foot_only: { title: "Foot-Only Interaction (139 Clips)", hint: "Ranked by Foot-Only Score ↓" },
   quality: { title: "Mean Quality (Success)", hint: "Ranked by Mean Success Quality ↓" },
+  stability: { title: "Mean Stability (Success)", hint: "Ranked by Mean Success Stability ↓" },
 };
 
 const MOD_BADGE = {
@@ -46,7 +56,7 @@ const MOD_BADGE = {
 };
 
 async function init() {
-  const v = "20261120104818";
+  const v = "20261124173441";
   const [siteRes, clipsRes] = await Promise.all([
     fetch(`data/site_data.json?v=${v}`, { cache: "no-store" }),
     fetch(`data/clips_clean_218.json?v=${v}`, { cache: "no-store" }),
@@ -55,11 +65,14 @@ async function init() {
   state.siteData = await siteRes.json();
   state.clipsData = await clipsRes.json();
   state.datasetId = state.siteData.default_dataset;
+  const protos = ds().protocols || [];
+  state.protocolId = protos.length > 1 ? "overview" : (protos[0]?.id || "nominal-v1");
 
   restoreFromHash();
   bindEvents();
   setupScrollSpy();
   renderSetting();
+  renderProtoChips();
   renderRanking();
   renderObjectTable();
   renderFailureTable();
@@ -75,6 +88,17 @@ function ds() {
   return state.siteData.datasets[state.datasetId];
 }
 
+function allProtocols() {
+  return ds().protocols || [];
+}
+
+function activeProtoObj() {
+  const protos = allProtocols();
+  if (!protos.length) return null;
+  if (state.protocolId === "overview") return protos[0];
+  return protos.find((p) => p.id === state.protocolId) || protos[0];
+}
+
 function pMeta(pid) {
   return state.siteData.policies[pid] || { id: pid, label: pid, modality: "", modality_tag: "depth", backend: "", added_date: "—" };
 }
@@ -87,6 +111,8 @@ function restoreFromHash() {
   const raw = window.location.hash.replace(/^#/, "");
   if (!raw || !raw.includes("=")) return;
   const p = new URLSearchParams(raw);
+  const proto = p.get("proto");
+  if (proto && (proto === "overview" || allProtocols().some((x) => x.id === proto))) state.protocolId = proto;
   if (p.get("sort") && SORT_META[p.get("sort")]) state.sortBy = p.get("sort");
   if (["all", "depth", "rgb", "proprio"].includes(p.get("mod"))) state.modality = p.get("mod");
   if (p.get("obj")) state.clipFilters.obj = p.get("obj");
@@ -100,6 +126,7 @@ function restoreFromHash() {
 
 function syncHash() {
   const p = new URLSearchParams();
+  if (state.protocolId !== "overview") p.set("proto", state.protocolId);
   if (state.sortBy !== "total_score") p.set("sort", state.sortBy);
   if (state.modality !== "all") p.set("mod", state.modality);
   if (state.clipFilters.obj !== "all") p.set("obj", state.clipFilters.obj);
@@ -108,6 +135,36 @@ function syncHash() {
   if (state.selectedClip) p.set("clip", state.selectedClip);
   const s = p.toString();
   history.replaceState(null, "", s ? `#${s}` : window.location.pathname);
+}
+
+function setProtocol(pid) {
+  state.protocolId = pid;
+  renderProtoChips();
+  syncHash();
+  renderRanking();
+  renderObjectTable();
+  renderFailureTable();
+}
+
+function renderProtoChips() {
+  const protos = allProtocols();
+  const wrap = document.getElementById("proto-chips-wrap");
+  const el = document.getElementById("proto-chips");
+  if (protos.length <= 1) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const items = [
+    { id: "overview", label: `0. Cross-Protocol Matrix (${ds().leaderboard.length}×${protos.length})` },
+    ...protos.map((p) => ({ id: p.id, label: p.label })),
+  ];
+  el.innerHTML = items
+    .map((it) => `<button class="chip ${state.protocolId === it.id ? "active" : ""}" data-proto="${esc(it.id)}">${esc(it.label)}</button>`)
+    .join("");
+  el.querySelectorAll(".chip").forEach((btn) => {
+    btn.addEventListener("click", () => setProtocol(btn.dataset.proto));
+  });
 }
 
 function bindEvents() {
@@ -119,6 +176,14 @@ function bindEvents() {
     syncHash();
     renderRanking();
     renderObjectTable();
+  });
+
+  document.getElementById("ov-mode-chips").addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    state.ovMode = btn.dataset.ov;
+    document.querySelectorAll("#ov-mode-chips .chip").forEach((b) => b.classList.toggle("active", b === btn));
+    renderRanking();
   });
 
   document.getElementById("modality-chips").addEventListener("click", (e) => {
@@ -219,16 +284,18 @@ function drillToClips({ obj = "all", policy = "all", fail = "all", inter = "all"
   document.getElementById("clips").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function visibleRows() {
-  let rows = [...ds().leaderboard];
+function visibleRows(protoOverride = null) {
+  const po = protoOverride || activeProtoObj();
+  let rows = [...(po ? po.leaderboard : ds().leaderboard)];
   if (state.modality !== "all") {
     rows = rows.filter((r) => pMeta(r.policy_id).modality_tag === state.modality);
   }
   rows.sort((a, b) => {
     if (state.sortBy === "sr") return b.sr - a.sr || b.total_score - a.total_score;
-    if (state.sortBy === "hand_all") return b.interaction.hand_all.total_score - a.interaction.hand_all.total_score;
-    if (state.sortBy === "foot_only") return b.interaction.foot_only.total_score - a.interaction.foot_only.total_score;
-    if (state.sortBy === "quality") return b.mean_quality_success - a.mean_quality_success;
+    if (state.sortBy === "hand_all") return (b.interaction?.hand_all?.total_score ?? -1) - (a.interaction?.hand_all?.total_score ?? -1);
+    if (state.sortBy === "foot_only") return (b.interaction?.foot_only?.total_score ?? -1) - (a.interaction?.foot_only?.total_score ?? -1);
+    if (state.sortBy === "quality") return (b.mean_quality_success ?? -1) - (a.mean_quality_success ?? -1);
+    if (state.sortBy === "stability") return (b.stab_score ?? -1) - (a.stab_score ?? -1);
     return b.total_score - a.total_score;
   });
   return rows;
@@ -239,22 +306,31 @@ function renderSetting() {
   const d = ds();
   const th = state.siteData.metric_spec.thresholds;
   const fp = state.siteData.fingerprint;
+  const protos = allProtocols();
+
+  document.getElementById("scoring-title").textContent = `SCORING SUMMARY · ${fp.metric_standard}`;
 
   document.getElementById("setting-desc").innerHTML = `
-    Closed-loop L0 MuJoCo evaluation (1 ms physics) on the <strong>${esc(d.name)}</strong>.<br />
-    218 clips in total: <strong>79 hand interaction</strong> (34 lift + 45 ground push) and <strong>139 foot-only</strong>.
+    Closed-loop L0 MuJoCo evaluation (1 ms physics) on the <strong>${esc(d.name)}</strong> across <strong>${protos.length || 1} progressive Sim2Real protocols</strong>.<br />
+    218 clips in total: <strong>79 hand interaction</strong> (34 lift + 45 ground push) and <strong>139 foot-only</strong>. Protocols are strictly isolated by <code>protocol_sha256</code>.
   `;
 
   document.getElementById("scoring-summary").innerHTML = `
-    <li><strong>Success</strong>: Passes all 4 hard gates (valid metrics, no failure termination, completeness, hand contact recall ≥ ${th.contact_recall_min} or exempt).</li>
-    <li><strong>Quality (0–100)</strong>: Relative object pose accuracy (<code>${th.score_w_pos} × pos + ${th.score_w_ori} × ori</code>); object pose is not a success gate.</li>
-    <li><strong>Total Score</strong>: Mean episode score across all 218 clips (failed episodes score 0).</li>
+    <li><strong>Success</strong>: Passes all 5 hard gates (valid metrics, no failure termination, completeness, hand contact recall ≥ ${th.contact_recall_min} or exempt, and 4–12 Hz pelvic angular jitter <code>J ≤ ${th.jitter_max ?? 0.25} rad/s</code>).</li>
+    <li><strong>Quality (0–100)</strong>: Relative object pose accuracy with multiplicative stability discount <code>(${th.score_w_pos} × pos + ${th.score_w_ori} × ori) × (${(1 - (th.score_jitter_alpha ?? 0.2)).toFixed(1)} + ${(th.score_jitter_alpha ?? 0.2).toFixed(1)} × stability / 100)</code>.</li>
+    <li><strong>Total Score</strong>: Mean episode score across played episodes (failed episodes score 0).</li>
   `;
+
+  const protoRowsHtml = protos
+    .map(
+      (p) => `<tr><td><code>${esc(p.id)}</code></td><td class="mono">${esc(p.protocol_sha)}</td><td>${p.is_stochastic ? esc(p.seed_cfg) : "Deterministic"}</td><td>${esc(p.desc)}</td></tr>`
+    )
+    .join("");
 
   document.getElementById("scoring-details").innerHTML = `
     <div class="details-grid">
       <div>
-        <div class="details-table-title">Failure Terminations</div>
+        <div class="details-table-title">Failure Terminations &amp; Jitter Gate</div>
         <table class="mini-table">
           <thead><tr><th>Type</th><th>Rule</th><th>Steps</th></tr></thead>
           <tbody>
@@ -262,6 +338,7 @@ function renderSetting() {
             <tr><td><code>body_z</code></td><td>|z − z_ref| &gt; ${th.body_z_err} m (${th.body_z_err_low_ref} m if ref z &lt; ${th.body_z_low_ref_root} m)</td><td>${th.body_z_steps}</td></tr>
             <tr><td><code>root_ori</code></td><td>Pelvis gravity tilt² &gt; ${th.root_ori_err_sq} (yaw-invariant)</td><td>${th.root_ori_steps}</td></tr>
             <tr><td><code>drop</code></td><td>Contact ∧ clearance &gt; ${th.drop_ref_clearance} m ∧ below ref &gt; ${th.drop_z_below_ref} m</td><td>${th.drop_steps}</td></tr>
+            <tr><td><code>root_jitter</code></td><td>4–12 Hz excess pelvic angular jitter J &gt; ${th.jitter_max ?? 0.25} rad/s</td><td>Episode</td></tr>
           </tbody>
         </table>
       </div>
@@ -272,18 +349,29 @@ function renderSetting() {
           <tbody>
             <tr><td>Position (50% mean + 50% final)</td><td>${th.score_w_pos}</td><td>≤ ${th.score_pos_full} m</td><td>≥ ${th.score_pos_zero} m</td></tr>
             <tr><td>Orientation (50% mean + 50% final)</td><td>${th.score_w_ori}</td><td>≤ ${th.score_ori_full} rad</td><td>≥ ${th.score_ori_zero} rad</td></tr>
+            <tr><td>Stability Discount (α=${th.score_jitter_alpha ?? 0.2})</td><td>×0.8–1.0</td><td>J ≤ ${th.score_jitter_full ?? 0.10}</td><td>J ≥ ${th.score_jitter_zero ?? 0.25}</td></tr>
             <tr><td>Truncation (non-failure)</td><td>—</td><td colspan="2">Ref root |x| or |y| &gt; ${th.motion_xy_range} m</td></tr>
-            <tr><td>Clean Subset Filter</td><td>—</td><td colspan="2">847 → 218 (drops pose bias, &gt;3 cm penetration, unlabeled)</td></tr>
           </tbody>
         </table>
       </div>
     </div>
+    ${
+      protos.length > 1
+        ? `<div style="margin-top:12px;">
+            <div class="details-table-title">Progressive Sim2Real Protocols (Strictly Isolated)</div>
+            <table class="mini-table">
+              <thead><tr><th>Protocol ID</th><th>SHA</th><th>Seed</th><th>Configuration</th></tr></thead>
+              <tbody>${protoRowsHtml}</tbody>
+            </table>
+          </div>`
+        : ""
+    }
   `;
 
   document.getElementById("meta-strip").innerHTML = `
-    <div><div class="meta-item-k">Evaluation Set</div><div class="meta-item-v">218 Clean Subset (played = 218)</div></div>
-    <div><div class="meta-item-k">Simulation</div><div class="meta-item-v">1 ms physics · engage=reset</div></div>
-    <div><div class="meta-item-k">Contact Signal</div><div class="meta-item-v">MuJoCo collision · data_hoi</div></div>
+    <div><div class="meta-item-k">Evaluation Set</div><div class="meta-item-v">218 Clean Subset (${d.leaderboard.length} policies)</div></div>
+    <div><div class="meta-item-k">Protocols</div><div class="meta-item-v">${protos.length || 1} Isolated Protocols (Nominal → Full DR)</div></div>
+    <div><div class="meta-item-k">Simulation</div><div class="meta-item-v">1 ms physics · engage=reset · data_hoi</div></div>
     <div><div class="meta-item-k">Standard / Commit</div><div class="meta-item-v mono">${esc(fp.metric_standard)} · ${esc(fp.eval_commit.slice(0, 8))}</div></div>
   `;
 }
@@ -291,31 +379,126 @@ function renderSetting() {
 /* 2. Overall Ranking */
 function renderRanking() {
   const d = ds();
-  const rows = visibleRows();
-  const sm = SORT_META[state.sortBy];
+  const protos = allProtocols();
+  const isOverview = state.protocolId === "overview" && protos.length > 1;
+  document.getElementById("sort-group").hidden = isOverview;
+  document.getElementById("ov-mode-group").hidden = !isOverview;
 
-  document.getElementById("rank-count").textContent = `${rows.length} of ${d.leaderboard.length} policies`;
+  const medals = ["🥇", "🥈", "🥉"];
+  const tbl = document.getElementById("ranking-table");
+
+  if (isOverview) {
+    const nomProto = protos[0];
+    let pids = nomProto.leaderboard.map((r) => r.policy_id);
+    if (state.modality !== "all") {
+      pids = pids.filter((pid) => pMeta(pid).modality_tag === state.modality);
+    }
+    document.getElementById("rank-count").textContent = `${pids.length} of ${nomProto.leaderboard.length} policies × ${protos.length} protocols`;
+    document.getElementById("rank-sort-hint").textContent = "Sorted by Nominal Total Score ↓ · Click any protocol column header to inspect";
+    document.getElementById("rank-spec-line").textContent =
+      `Dataset: ${d.name}  |  Standard: ${d.metric_standard}  |  No cross-protocol score averaging; * marks depth-timeout incomplete clips`;
+    document.getElementById("rank-heading").textContent = `Cross-Protocol Degradation Matrix (${protos.length} Protocols)`;
+    document.getElementById("rank-updated").textContent = `Latest update: ${d.date}`;
+
+    const byProtoPolicy = {};
+    protos.forEach((p) => {
+      byProtoPolicy[p.id] = {};
+      p.leaderboard.forEach((r) => {
+        byProtoPolicy[p.id][r.policy_id] = r;
+      });
+    });
+
+    const thead = `
+      <thead>
+        <tr>
+          <th style="width:54px;">Rank</th>
+          <th class="left">Policy</th>
+          <th>Modality</th>
+          ${protos.map((p) => `<th class="th-jump" data-jump-proto="${esc(p.id)}" title="${esc(p.desc)}">${esc(p.short)} ↗<span class="sub-val mono">${esc(p.protocol_sha)}</span></th>`).join("")}
+        </tr>
+      </thead>
+    `;
+
+    const tbody = pids.length
+      ? pids
+          .map((pid, i) => {
+            const pm = pMeta(pid);
+            const rankCell = i < 3 ? `<span class="medal">${medals[i]}</span>` : `<span class="rank-num">#${i + 1}</span>`;
+            const cells = protos
+              .map((p) => {
+                const r = byProtoPolicy[p.id]?.[pid];
+                if (!r) return `<td>—</td>`;
+                const mark = r.n_rf ? "*" : "";
+                const showScore = state.ovMode !== "sr";
+                const showSr = state.ovMode !== "score";
+                const mainLine = [
+                  showScore ? `<strong>${fmtNum(r.total_score, 2)}</strong>` : "",
+                  showSr ? `${(r.sr * 100).toFixed(1)}%${mark}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(`<span style="color:var(--muted);"> · </span>`);
+                const subLine =
+                  p.id === "nominal-v1"
+                    ? `Baseline n=${r.n}`
+                    : `${fmtDelta(r.delta_score_nom)} / ${fmtDelta(r.delta_sr_nom, "%")}`;
+                return `<td><div>${mainLine}</div><span class="sub-val">${subLine}</span></td>`;
+              })
+              .join("");
+            return `
+              <tr>
+                <td>${rankCell}</td>
+                <td class="left">
+                  <button class="method-btn" data-drill-p="${esc(pid)}">${esc(pName(pid))}</button>
+                  <span class="sub-val">${esc(pm.modality)}</span>
+                </td>
+                <td><span class="tag-pill ${pm.modality_tag === "depth" ? "tag-blue" : ""}">${esc(MOD_BADGE[pm.modality_tag] || pm.modality_tag)}</span></td>
+                ${cells}
+              </tr>
+            `;
+          })
+          .join("")
+      : `<tr><td colspan="${3 + protos.length}" class="empty-msg">No policies match the selected modality</td></tr>`;
+
+    tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
+    tbl.querySelectorAll("[data-jump-proto]").forEach((th) => {
+      th.addEventListener("click", () => setProtocol(th.dataset.jumpProto));
+    });
+    tbl.querySelectorAll("[data-drill-p]").forEach((btn) => {
+      btn.addEventListener("click", () => drillToClips({ policy: btn.dataset.drillP, fail: "failed" }));
+    });
+    return;
+  }
+
+  const po = activeProtoObj();
+  const rows = visibleRows(po);
+  const sm = SORT_META[state.sortBy];
+  const isNom = !po || po.id === "nominal-v1";
+  const isDR = Boolean(po && po.is_stochastic);
+
+  document.getElementById("rank-count").textContent = `${rows.length} of ${(po ? po.leaderboard : d.leaderboard).length} policies`;
   document.getElementById("rank-sort-hint").textContent = sm.hint;
-  document.getElementById("rank-spec-line").textContent =
-    `Dataset: ${d.name}  |  Sim: ${d.sim_config}  |  Denominator: 218 / 218 (played)`;
-  document.getElementById("rank-heading").textContent = `Overall Ranking · ${sm.title}`;
+  const shaNote = po ? `protocol_sha: ${po.protocol_sha}${po.is_stochastic ? ` · seed: ${po.seed_cfg} (${po.seed_matrix_sha})` : ""}` : "";
+  document.getElementById("rank-spec-line").textContent = po
+    ? `${po.desc}  |  ${shaNote}  |  Denominator: played`
+    : `Dataset: ${d.name}  |  Sim: ${d.sim_config}  |  Denominator: 218 / 218 (played)`;
+  document.getElementById("rank-heading").textContent = `${po ? po.label : "Overall Ranking"} · ${sm.title}`;
   document.getElementById("rank-updated").textContent = `Latest update: ${d.date}`;
 
   const hl = (key) => (state.sortBy === key ? "col-hl" : "");
-  const medals = ["🥇", "🥈", "🥉"];
 
   const thead = `
     <thead>
       <tr>
-        <th style="width:60px;">Rank</th>
+        <th style="width:56px;">Rank</th>
         <th class="left">Policy</th>
         <th>Modality</th>
         <th class="${hl("total_score")}">Total Score</th>
         <th class="${hl("sr")}">Success Rate</th>
-        <th class="${hl("hand_all")}">Hand (79)</th>
-        <th class="${hl("foot_only")}">Foot-Only (139)</th>
+        ${!isNom ? `<th>Δ vs Nom</th>` : ""}
+        <th class="${hl("hand_all")}">Hand (${isDR ? "158" : "79"})</th>
+        <th class="${hl("foot_only")}">Foot-Only (${isDR ? "278" : "139"})</th>
         <th class="${hl("quality")}">Quality (Succ)</th>
-        <th>Added</th>
+        <th class="${hl("stability")}">Stability</th>
       </tr>
     </thead>
   `;
@@ -327,6 +510,7 @@ function renderRanking() {
           const rankCell = i < 3 ? `<span class="medal">${medals[i]}</span>` : `<span class="rank-num">#${i + 1}</span>`;
           const h = r.interaction.hand_all;
           const f = r.interaction.foot_only;
+          const mark = r.n_rf ? "*" : "";
           return `
             <tr>
               <td>${rankCell}</td>
@@ -335,19 +519,19 @@ function renderRanking() {
                 <span class="sub-val">${esc(pm.modality)}</span>
               </td>
               <td><span class="tag-pill ${pm.modality_tag === "depth" ? "tag-blue" : ""}">${esc(MOD_BADGE[pm.modality_tag] || pm.modality_tag)}</span></td>
-              <td class="${hl("total_score")}">${fmtNum(r.total_score, 3)}</td>
-              <td class="${hl("sr")}">${fmtPct(r.sr)}<span class="sub-val">${r.successes} / ${r.n} · [${(r.wilson95[0] * 100).toFixed(1)}%, ${(r.wilson95[1] * 100).toFixed(1)}%]</span></td>
-              <td class="${hl("hand_all")}">${fmtNum(h.total_score, 2)}<span class="sub-val">${fmtPct(h.sr)} (${h.successes}/${h.n})</span></td>
-              <td class="${hl("foot_only")}">${fmtNum(f.total_score, 2)}<span class="sub-val">${fmtPct(f.sr)} (${f.successes}/${f.n})</span></td>
-              <td class="${hl("quality")}">${fmtNum(r.mean_quality_success, 2)}</td>
-              <td class="mono" style="color:var(--muted);">${esc(pm.added_date || "—")}</td>
+              <td class="${hl("total_score")}">${fmtNum(r.total_score, 2)}</td>
+              <td class="${hl("sr")}">${(r.sr * 100).toFixed(1)}%${mark}<span class="sub-val">${r.successes}/${r.n} · [${(r.wilson95[0] * 100).toFixed(1)}%, ${(r.wilson95[1] * 100).toFixed(1)}%]</span></td>
+              ${!isNom ? `<td><div>${fmtDelta(r.delta_score_nom)}</div><span class="sub-val">${fmtDelta(r.delta_sr_nom, "%")}</span></td>` : ""}
+              <td class="${hl("hand_all")}">${fmtNum(h.total_score, 2)}<span class="sub-val">${(h.sr * 100).toFixed(1)}% (${h.successes}/${h.n})</span></td>
+              <td class="${hl("foot_only")}">${fmtNum(f.total_score, 2)}<span class="sub-val">${(f.sr * 100).toFixed(1)}% (${f.successes}/${f.n})</span></td>
+              <td class="${hl("quality")}">${fmtNum(r.mean_quality_success, 2)}<span class="sub-val">pos ${fmtNum(r.pos_score, 1)} · ori ${fmtNum(r.ori_score, 1)}</span></td>
+              <td class="${hl("stability")}">${fmtNum(r.stab_score, 1)}</td>
             </tr>
           `;
         })
         .join("")
-    : `<tr><td colspan="9" class="empty-msg">No policies match the selected modality</td></tr>`;
+    : `<tr><td colspan="${isNom ? 9 : 10}" class="empty-msg">No policies match the selected modality</td></tr>`;
 
-  const tbl = document.getElementById("ranking-table");
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
   tbl.querySelectorAll("[data-drill-p]").forEach((btn) => {
     btn.addEventListener("click", () => drillToClips({ policy: btn.dataset.drillP, fail: "failed" }));
@@ -356,7 +540,10 @@ function renderRanking() {
 
 /* 3. Per-Object Results */
 function renderObjectTable() {
-  const rows = visibleRows();
+  const po = activeProtoObj();
+  const rows = visibleRows(po);
+  const protoLabel = po ? po.short : "Nominal";
+  document.getElementById("per-object-heading").textContent = `Per-Object Results (${protoLabel})`;
   const tbl = document.getElementById("object-table");
   if (!rows.length) {
     tbl.innerHTML = `<tbody><tr><td class="empty-msg">No policies match the selected modality</td></tr></tbody>`;
@@ -409,14 +596,18 @@ function renderObjectTable() {
 
 /* 4. Failure Table */
 function renderFailureTable() {
-  const rows = visibleRows();
-  const cols = ["drop", "contact_recall", "incomplete", "body_z", "root_ori"];
+  const po = activeProtoObj();
+  const rows = visibleRows(po);
+  const protoLabel = po ? po.short : "Nominal";
+  const denomLabel = po && po.is_stochastic ? "436 Runs" : "218 Clips";
+  document.getElementById("failure-heading").textContent = `Failure Analysis (${protoLabel} · ${denomLabel})`;
+  const cols = ["root_jitter", "drop", "contact_recall", "incomplete", "body_z", "root_ori"];
 
   const thead = `
     <thead>
       <tr>
         <th class="left">Policy</th>
-        <th>Failed Clips</th>
+        <th>Failed</th>
         ${cols.map((c) => `<th class="mono">${c}</th>`).join("")}
       </tr>
     </thead>
@@ -584,7 +775,7 @@ function renderClipDetail(clip) {
       const r = clip.results[pid];
       const hl = state.highlightPolicy === pid ? "row-hl" : "";
       const hasVid = clipVids.some((v) => v.policy_id === pid);
-      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="6">—</td></tr>`;
+      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="7">—</td></tr>`;
       const badge = r.success
         ? `<span class="tag-pill tag-green">Success</span>`
         : `<span class="tag-pill tag-coral">${esc((r.fail_reasons || []).join(", ") || r.fail_reason)}</span>`;
@@ -595,6 +786,7 @@ function renderClipDetail(clip) {
           <td>${badge}</td>
           <td><strong>${fmtNum(r.episode_score, 2)}</strong></td>
           <td>${fmtNum(r.quality_score, 2)}</td>
+          <td class="mono">${r.root_jitter != null ? fmtNum(r.root_jitter, 3) : "—"}</td>
           <td class="mono">${r.obj_pos_err_mean != null ? `${fmtNum(r.obj_pos_err_mean, 3)} / ${fmtNum(r.obj_pos_err_final, 3)}` : "—"}</td>
           <td class="mono">${r.obj_ori_err_mean != null ? `${fmtNum(r.obj_ori_err_mean, 3)} / ${fmtNum(r.obj_ori_err_final, 3)}` : "—"}</td>
           <td>${contact}</td>
@@ -635,6 +827,7 @@ function renderClipDetail(clip) {
             <th>Status</th>
             <th>Episode Score</th>
             <th>Quality</th>
+            <th>Jitter (rad/s)</th>
             <th>Rel Pos Err m (Mean/Final)</th>
             <th>Rel Ori Err rad (Mean/Final)</th>
             <th>Contact Recall</th>

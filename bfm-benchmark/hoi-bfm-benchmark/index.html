@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>BFM BenchMark · Leaderboard 0.1</title>
-  <link rel="stylesheet" href="styles.css?v=20261120104818" />
+  <link rel="stylesheet" href="styles.css?v=20261124173441" />
 </head>
 <body>
   <header class="topbar">
@@ -45,10 +45,10 @@
         <p class="setting-desc" id="setting-desc">Loading benchmark metadata…</p>
 
         <div class="policy-box">
-          <div class="policy-box-title">SCORING SUMMARY · hoi-bfm-official-2026-11-11</div>
+          <div class="policy-box-title" id="scoring-title">SCORING SUMMARY · hoi-bfm-official-2026-11-23</div>
           <ul class="summary-points" id="scoring-summary"></ul>
           <details class="inline-details">
-            <summary>Show full protocol &amp; threshold tables</summary>
+            <summary>Show full protocol, jitter gate &amp; Sim2Real stress tables</summary>
             <div id="scoring-details" class="details-body"></div>
           </details>
         </div>
@@ -58,15 +58,29 @@
 
       <!-- 2. Overall Ranking -->
       <section id="ranking" class="section-card">
-        <div class="control-bar">
-          <div class="ctrl-group">
+        <div class="proto-bar" id="proto-chips-wrap">
+          <span class="ctrl-label">Protocol</span>
+          <div class="chip-row" id="proto-chips"></div>
+        </div>
+
+        <div class="control-bar" id="rank-controls">
+          <div class="ctrl-group" id="sort-group">
             <span class="ctrl-label">Rank by</span>
             <div class="chip-row" id="sort-chips">
               <button class="chip active" data-sort="total_score">Total Score</button>
               <button class="chip" data-sort="sr">Success Rate</button>
-              <button class="chip" data-sort="hand_all">Hand Interaction (79)</button>
+              <button class="chip" data-sort="hand_all">Hand (79)</button>
               <button class="chip" data-sort="foot_only">Foot-Only (139)</button>
               <button class="chip" data-sort="quality">Quality (Succ)</button>
+              <button class="chip" data-sort="stability">Stability (Succ)</button>
+            </div>
+          </div>
+          <div class="ctrl-group" id="ov-mode-group" hidden>
+            <span class="ctrl-label">Display</span>
+            <div class="chip-row" id="ov-mode-chips">
+              <button class="chip active" data-ov="both">Score + SR</button>
+              <button class="chip" data-ov="score">Score Only</button>
+              <button class="chip" data-ov="sr">SR Only</button>
             </div>
           </div>
           <div class="ctrl-group">
@@ -100,8 +114,8 @@
       <section id="per-object" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Per-Object Results</h2>
-            <p class="sec-sub">Best per row is highlighted in green; click any cell to drill down into matching clips</p>
+            <h2 class="sec-h2" id="per-object-heading">Per-Object Results</h2>
+            <p class="sec-sub" id="per-object-sub">Best per row is highlighted in green; click any cell to drill down into matching clips</p>
           </div>
           <div class="control-inline">
             <div class="chip-row" id="obj-scope-chips">
@@ -124,8 +138,8 @@
       <section id="failures" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Failure Analysis (218 Clips)</h2>
-            <p class="sec-sub">Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect clips</p>
+            <h2 class="sec-h2" id="failure-heading">Failure Analysis (218 Clips)</h2>
+            <p class="sec-sub" id="failure-sub">Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect Nominal clips</p>
           </div>
         </div>
 
@@ -138,7 +152,7 @@
       <section id="clips" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Per-Clip Diagnostics</h2>
+            <h2 class="sec-h2">Per-Clip Diagnostics (Nominal · 218 Clips)</h2>
             <p class="sec-sub">Filter all 218 clips by object, interaction type, policy failure tag, or A/B policy disagreement</p>
           </div>
           <button class="btn-subtle" id="clip-reset-btn" type="button">Reset Filters</button>
@@ -153,6 +167,7 @@
             <option value="all">All outcomes / reasons</option>
             <option value="failed">Failed only</option>
             <option value="succeeded">Succeeded only</option>
+            <option value="root_jitter">Has root_jitter</option>
             <option value="drop">Has drop</option>
             <option value="contact_recall">Has contact_recall</option>
             <option value="incomplete">Has incomplete</option>
@@ -225,6 +240,6 @@
     </main>
   </div>
 
-  <script type="module" src="app.js?v=20261120104818"></script>
+  <script type="module" src="app.js?v=20261124173441"></script>
 </body>
 </html>

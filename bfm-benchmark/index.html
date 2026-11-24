@@ -244,9 +244,9 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">BFM · Whole-Body Motion Tracking</h2>
-            <span class="badge badge-blue">Protocol v2 Ready</span>
+            <span class="badge badge-green">Live · 5 Policies (2 Protocols)</span>
           </div>
-          <p class="track-desc">Standardized physics evaluation for humanoid motion-tracking policies across robots, measuring tracking accuracy and stability.</p>
+          <p class="track-desc">Standardized MuJoCo 3.17.0 evaluation for Roban S17 (LAFAN1 77 clips, 50 Hz) &amp; G1 across Nominal v2 and Sim2Real-P0 stress protocols.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./bfm/">Open BFM Track →</a>
@@ -257,9 +257,9 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">HOI-BFM · Human-Object Interaction</h2>
-            <span class="badge badge-green">Live · 6 Policies</span>
+            <span class="badge badge-green">Live · 8 Policies (6 Protocols)</span>
           </div>
-          <p class="track-desc">Closed-loop simulation benchmark for lifting, pushing, and coordinated whole-body object manipulation with per-clip diagnostics and ghost replays.</p>
+          <p class="track-desc">Closed-loop simulation benchmark (<code>hoi-bfm-official-2026-11-23</code>) across 6 progressive Sim2Real protocols (Nominal → Full DR) with per-clip diagnostics and ghost replays.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./hoi-bfm-benchmark/">Open HOI-BFM Track →</a>
@@ -271,6 +271,16 @@
       <h2>News</h2>
       <p class="news-sub">Policy onboarding log and benchmark release history</p>
       <ul class="news-list">
+        <li class="news-item">
+          <span class="news-date mono">2026-11-24</span>
+          <span><span class="badge badge-green">Multi-Protocol</span></span>
+          <span>Published full <strong>HOI-BFM 8-policy × 6-protocol Sim2Real matrix</strong> (Nominal → P0 → Input DR → Obj Phys DR → Obj Pose DR → Full DR) and <strong>BFM Roban S17 LAFAN1-77</strong> 5-policy results under Nominal &amp; Sim2Real-P0.</span>
+        </li>
+        <li class="news-item">
+          <span class="news-date mono">2026-11-23</span>
+          <span><span class="badge badge-blue">Standard</span></span>
+          <span>Adopted <code>hoi-bfm-official-2026-11-23</code> (4–12 Hz <code>root_jitter ≤ 0.25 rad/s</code> gate + stability discount α=0.20) and onboarded <code>partymimic_hoi_tq3e5_20261123</code> &amp; <code>partymimic_hoi_pushL_20261123</code>.</span>
+        </li>
         <li class="news-item">
           <span class="news-date mono">2026-11-20</span>
           <span><span class="badge badge-blue">Portal</span></span>
