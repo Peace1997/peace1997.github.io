@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>BFM BenchMark · Leaderboard 0.1</title>
-  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261124" />
+  <link rel="stylesheet" href="../hoi-bfm-benchmark/styles.css?v=20261125110322" />
 </head>
 <body>
   <header class="topbar">
@@ -131,18 +131,23 @@
         <div class="board-head">
           <div>
             <h2 class="sec-h2">Verification &amp; CLI</h2>
-            <p class="sec-sub">Published scores must include reproducible pose traces verified via <code>motionchallenge-verify</code></p>
+            <p class="sec-sub"><code>evaluate.py</code> automatically runs <code>motionchallenge-verify</code> and writes <code>runtime.json</code> &amp; <code>verification.json</code>; use <code>--data suites/roban</code> for the 1-clip onboarding check or a full Roban LAFAN1-77 manifest directory for 77-clip evaluation</p>
           </div>
         </div>
         <div class="policy-box" style="margin-bottom:0;">
-          <div class="policy-box-title">STANDARD EVALUATION COMMAND</div>
-          <pre class="mono" style="margin:6px 0 0;overflow-x:auto;color:var(--text);">uv run python evaluate.py --policy roban-partymimic --data suites/roban \
+          <div class="policy-box-title">STANDARD EVALUATION &amp; INDEPENDENT VERIFICATION COMMANDS</div>
+          <pre class="mono" style="margin:6px 0 0;overflow-x:auto;color:var(--text);"># 1) Onboarding check (1 clip: suites/roban) or full LAFAN1-77 (pass --data /path/to/roban_lafan77):
+uv run python evaluate.py --policy roban-partymimic --data /path/to/roban_lafan77 \
   --weights /path/to/policy.onnx --output /path/to/run_nominal
-uv run python evaluate.py --policy roban-partymimic --roban-protocol sim2real-p0 \
-  --data suites/roban --weights /path/to/policy.onnx --output /path/to/run_p0
-uv run motionchallenge-verify --robot robots/roban-s17-21dof-cpu-v0.json --suite suites/roban/dataset.json \
+uv run python evaluate.py --policy roban-sparse4 --roban-protocol sim2real-p0 \
+  --data /path/to/roban_lafan77 --weights /path/to/roban_sparse4.onnx --output /path/to/run_p0
+
+# 2) Standalone re-verification (evaluate.py already runs this automatically and writes verification.json):
+uv run motionchallenge-verify --robot robots/roban-s17-21dof-cpu-v0.json \
+  --suite /path/to/roban_lafan77/dataset.json \
   --protocol suites/roban/protocol.mujoco317-ideal-proprioception-sim2real-p0-none-v1.json \
-  --controller suites/roban/runtime.json --data suites/roban --result /path/to/run_p0/result.json</pre>
+  --controller /path/to/run_p0/runtime.json --data /path/to/roban_lafan77 \
+  --result /path/to/run_p0/result.json</pre>
         </div>
       </section>
 
@@ -159,6 +164,6 @@ uv run motionchallenge-verify --robot robots/roban-s17-21dof-cpu-v0.json --suite
     </main>
   </div>
 
-  <script type="module" src="app.js?v=20261124"></script>
+  <script type="module" src="app.js?v=20261125110322"></script>
 </body>
 </html>

@@ -30,7 +30,7 @@ function fmtDeltaErr(v) {
 }
 
 async function init() {
-  const res = await fetch("data/bfm_data.json?v=20261124", { cache: "no-store" });
+  const res = await fetch("data/bfm_data.json?v=20261125110322", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load data/bfm_data.json");
   state.data = await res.json();
   state.suiteId = state.data.suites[0].id;
@@ -94,6 +94,14 @@ function setupScrollSpy() {
 
 function renderSetting() {
   const d = state.data;
+  const suite = currentSuite();
+  const protos = d.protocols || [];
+  const nomProto = protoMeta("nominal") || protos[0];
+  const p0Proto = protoMeta("sim2real-p0") || protos[1];
+  const nomSha = nomProto?.protocol_sha || "—";
+  const p0Sha = p0Proto?.protocol_sha || "—";
+  const protoListLabel = protos.map((p) => p.short || p.id).join(" · ") || "—";
+
   document.getElementById("bfm-desc").innerHTML = `
     Whole-body humanoid motion-tracking benchmark under unified <strong>${esc(d.protocol_version)}</strong> (${esc(d.engine)}).<br />
     Policies run in isolated worker processes with per-step PD recomputation and independent trace verification; Nominal and Sim2Real-P0 protocols are strictly isolated by <code>protocol_sha256</code>.
@@ -101,7 +109,7 @@ function renderSetting() {
   document.getElementById("bfm-scoring").innerHTML = `
     <li><strong>Success &amp; Completion</strong>: Zero failures through planned horizon; Completion = pre-failure duration ÷ total duration (macro-averaged across clips).</li>
     <li><strong>Failure Rules</strong>: Root height error &gt; 0.25 m or projected gravity Z error &gt; 0.8 (SuperMimic Appendix A; end-effector deviation is not a failure condition).</li>
-    <li><strong>Tracking Accuracy</strong>: Full-motion &amp; Prefix XY-aligned MPBPE (mm ↓), XY+Yaw MPBPE (mm ↓), and 21-joint MAE (rad ↓); every result verified via <code>motionchallenge-verify</code>.</li>
+    <li><strong>Tracking Accuracy</strong>: Full-motion &amp; Prefix XY-aligned MPBPE (mm ↓), XY+Yaw MPBPE (mm ↓), and Joint MAE (rad ↓); every result verified via <code>motionchallenge-verify</code>.</li>
   `;
   document.getElementById("bfm-details").innerHTML = `
     <div class="details-grid">
@@ -117,14 +125,14 @@ function renderSetting() {
         </table>
       </div>
       <div>
-        <div class="details-table-title">Protocol Comparison (Nominal v2 vs Sim2Real-P0 v1)</div>
+        <div class="details-table-title">Protocol Comparison (${esc(nomProto?.short || "Nominal")} vs ${esc(p0Proto?.short || "Sim2Real-P0")})</div>
         <table class="mini-table">
-          <thead><tr><th>Parameter</th><th>Nominal v2 (<code>3ad95c0c</code>)</th><th>Sim2Real-P0 v1 (<code>7414fbb1</code>)</th></tr></thead>
+          <thead><tr><th>Parameter</th><th>${esc(nomProto?.short || "Nominal")} (<code>${esc(nomSha)}</code>)</th><th>${esc(p0Proto?.short || "Sim2Real-P0")} (<code>${esc(p0Sha)}</code>)</th></tr></thead>
           <tbody>
             <tr><td>Ground Friction</td><td><code>1.0</code></td><td><code>0.4</code></td></tr>
             <tr><td>Control Delay</td><td><code>0 ms</code></td><td><code>10 ms</code> event queue</td></tr>
             <tr><td>Joint Damping / Friction</td><td><code>0.0 / 0.0</code></td><td><code>0.2 / 0.1</code></td></tr>
-            <tr><td>Motor Envelope</td><td>Static torque clamp</td><td>21-joint linear back-EMF</td></tr>
+            <tr><td>Motor Envelope</td><td>Static torque clamp</td><td>Linear back-EMF velocity-torque envelope</td></tr>
           </tbody>
         </table>
       </div>
@@ -132,18 +140,25 @@ function renderSetting() {
   `;
   document.getElementById("bfm-meta").innerHTML = `
     <div><div class="meta-item-k">Physics Engine</div><div class="meta-item-v">${esc(d.engine)}</div></div>
-    <div><div class="meta-item-k">Active Suite</div><div class="meta-item-v">Roban S17 · LAFAN1 77 Clips (50 Hz)</div></div>
-    <div><div class="meta-item-k">Protocols</div><div class="meta-item-v">Nominal v2 · Sim2Real-P0 v1</div></div>
+    <div><div class="meta-item-k">Active Suite</div><div class="meta-item-v">${esc(suite.name)} (${suite.source_fps} Hz)</div></div>
+    <div><div class="meta-item-k">Protocols</div><div class="meta-item-v">${esc(protoListLabel)}</div></div>
     <div><div class="meta-item-k">Verification</div><div class="meta-item-v mono">motionchallenge-verify</div></div>
   `;
 }
 
 function renderProtoChips() {
   const el = document.getElementById("bfm-proto-chips");
+  const suite = currentSuite();
+  const protos = state.data.protocols || [];
+  const suiteProtos = suite.protocols || {};
+  const counts = protos.map((p) => (suiteProtos[p.id] || []).length);
+  const maxPol = counts.length ? Math.max(...counts) : 0;
   const items = [
-    { id: "nominal", label: "1. Nominal Baseline (5)" },
-    { id: "sim2real-p0", label: "2. Sim2Real-P0 Stress (5)" },
-    { id: "overview", label: "Cross-Protocol Matrix (5×2)" },
+    ...protos.map((p) => {
+      const n = (suiteProtos[p.id] || []).length;
+      return { id: p.id, label: n ? `${p.label} (${n})` : p.label };
+    }),
+    { id: "overview", label: maxPol ? `Cross-Protocol Matrix (${maxPol}×${protos.length})` : "Cross-Protocol Matrix" },
   ];
   el.innerHTML = items
     .map((it) => `<button class="chip ${state.protocolId === it.id ? "active" : ""}" data-proto="${esc(it.id)}">${esc(it.label)}</button>`)
@@ -162,6 +177,8 @@ function renderSuiteChips() {
     btn.addEventListener("click", () => {
       state.suiteId = btn.dataset.suite;
       el.querySelectorAll(".chip").forEach((b) => b.classList.toggle("active", b === btn));
+      renderSetting();
+      renderProtoChips();
       renderRanking();
     });
   });
@@ -191,13 +208,15 @@ function renderRanking() {
   }
 
   if (isOverview) {
-    const nomRows = suite.protocols.nominal || [];
-    const p0Map = Object.fromEntries((suite.protocols["sim2real-p0"] || []).map((r) => [r.policy_id, r]));
-    document.getElementById("bfm-proto-badge").textContent = "Nominal vs Sim2Real-P0";
+    const nomProto = protoMeta("nominal") || state.data.protocols[0];
+    const p0Proto = protoMeta("sim2real-p0") || state.data.protocols[1];
+    const nomRows = suite.protocols[nomProto?.id || "nominal"] || [];
+    const p0Map = Object.fromEntries((suite.protocols[p0Proto?.id || "sim2real-p0"] || []).map((r) => [r.policy_id, r]));
+    document.getElementById("bfm-proto-badge").textContent = `${nomProto?.short || "Nominal"} vs ${p0Proto?.short || "Sim2Real-P0"}`;
     document.getElementById("bfm-spec-line").textContent =
       `Suite: ${suite.id} (suite_sha: ${suite.suite_sha || "—"})  |  Side-by-side comparison without cross-protocol averaging · Click column headers to inspect`;
     document.getElementById("bfm-rank-heading").textContent = `Cross-Protocol Degradation Matrix · ${suite.name}`;
-    document.getElementById("bfm-rank-sub").textContent = `Robot: ${suite.robot} · ${suite.clips} clips (${suite.source_fps} Hz) · MuJoCo 3.17.0 (${suite.physics_dt})`;
+    document.getElementById("bfm-rank-sub").textContent = `Robot: ${suite.robot} · ${suite.clips} clips (${suite.source_fps} Hz) · ${state.data.engine} (${suite.physics_dt})`;
 
     const thead = `
       <thead>
@@ -205,8 +224,8 @@ function renderRanking() {
           <th style="width:54px;">Rank</th>
           <th class="left">Policy</th>
           <th class="left">Ref Input</th>
-          <th class="th-jump" data-jump-proto="nominal">Nominal v2 ↗<span class="sub-val mono">sha:3ad95c0c</span></th>
-          <th class="th-jump" data-jump-proto="sim2real-p0">Sim2Real-P0 v1 ↗<span class="sub-val mono">sha:7414fbb1</span></th>
+          <th class="th-jump" data-jump-proto="${esc(nomProto?.id || "nominal")}">${esc(nomProto?.short || "Nominal")} ↗<span class="sub-val mono">sha:${esc(nomProto?.protocol_sha || "—")}</span></th>
+          <th class="th-jump" data-jump-proto="${esc(p0Proto?.id || "sim2real-p0")}">${esc(p0Proto?.short || "Sim2Real-P0")} ↗<span class="sub-val mono">sha:${esc(p0Proto?.protocol_sha || "—")}</span></th>
           <th>P0 Degradation (Δ vs Nominal)</th>
         </tr>
       </thead>

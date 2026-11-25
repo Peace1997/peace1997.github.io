@@ -1,9 +1,9 @@
 {
-  "snapshot_version": "20261124-173441",
+  "snapshot_version": "20261125-110322",
   "fingerprint": {
-    "metric_standard": "hoi-bfm-official-2026-11-23",
+    "metric_standard": "hoi-bfm-official-2026-11-24",
     "eval_commit": "eaa046c60055",
-    "exported_at": "2026-11-24T17:34:41+08:00",
+    "exported_at": "2026-11-25T11:03:22+08:00",
     "registry_sha256": "1bcff9e888031e01478a31c1dbbc3778a8298fb74e8ff97a295d94bab49c96f9",
     "dataset_clipset_sha256": {
       "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
@@ -24,7 +24,7 @@
       "clip_count": 218,
       "policies": 8,
       "protocols": 6,
-      "videos": 7
+      "videos": 3
     }
   }
 }

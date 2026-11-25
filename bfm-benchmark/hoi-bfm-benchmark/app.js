@@ -56,7 +56,7 @@ const MOD_BADGE = {
 };
 
 async function init() {
-  const v = "20261124173441";
+  const v = "20261125110322";
   const [siteRes, clipsRes] = await Promise.all([
     fetch(`data/site_data.json?v=${v}`, { cache: "no-store" }),
     fetch(`data/clips_clean_218.json?v=${v}`, { cache: "no-store" }),
@@ -317,7 +317,7 @@ function renderSetting() {
 
   document.getElementById("scoring-summary").innerHTML = `
     <li><strong>Success</strong>: Passes all 5 hard gates (valid metrics, no failure termination, completeness, hand contact recall ≥ ${th.contact_recall_min} or exempt, and 4–12 Hz pelvic angular jitter <code>J ≤ ${th.jitter_max ?? 0.25} rad/s</code>).</li>
-    <li><strong>Quality (0–100)</strong>: Relative object pose accuracy with multiplicative stability discount <code>(${th.score_w_pos} × pos + ${th.score_w_ori} × ori) × (${(1 - (th.score_jitter_alpha ?? 0.2)).toFixed(1)} + ${(th.score_jitter_alpha ?? 0.2).toFixed(1)} × stability / 100)</code>.</li>
+    <li><strong>Quality (0–100)</strong>: Object pose accuracy with World 3D bottleneck cap and multiplicative stability discount <code>(${th.score_w_pos} × min(pos_rel, pos_world) + ${th.score_w_ori} × ori) × (${(1 - (th.score_jitter_alpha ?? 0.2)).toFixed(1)} + ${(th.score_jitter_alpha ?? 0.2).toFixed(1)} × stability / 100)</code>.</li>
     <li><strong>Total Score</strong>: Mean episode score across played episodes (failed episodes score 0).</li>
   `;
 
@@ -343,12 +343,13 @@ function renderSetting() {
         </table>
       </div>
       <div>
-        <div class="details-table-title">Quality Score Hinge (Relative Reference)</div>
+        <div class="details-table-title">Quality Score Hinge (Relative + World 3D Cap)</div>
         <table class="mini-table">
           <thead><tr><th>Component</th><th>Weight</th><th>Full (100)</th><th>Zero (0)</th></tr></thead>
           <tbody>
-            <tr><td>Position (50% mean + 50% final)</td><td>${th.score_w_pos}</td><td>≤ ${th.score_pos_full} m</td><td>≥ ${th.score_pos_zero} m</td></tr>
-            <tr><td>Orientation (50% mean + 50% final)</td><td>${th.score_w_ori}</td><td>≤ ${th.score_ori_full} rad</td><td>≥ ${th.score_ori_zero} rad</td></tr>
+            <tr><td>Position · Relative 3D (50% mean + 50% final)</td><td>${th.score_w_pos} (min)</td><td>≤ ${th.score_pos_full} m</td><td>≥ ${th.score_pos_zero} m</td></tr>
+            <tr><td>Position Cap · World 3D (50% mean + 50% final)</td><td>min(rel, wld)</td><td>≤ ${th.score_pos_world_full ?? 0.20} m</td><td>≥ ${th.score_pos_world_zero ?? 1.00} m</td></tr>
+            <tr><td>Orientation · Relative (50% mean + 50% final)</td><td>${th.score_w_ori}</td><td>≤ ${th.score_ori_full} rad</td><td>≥ ${th.score_ori_zero} rad</td></tr>
             <tr><td>Stability Discount (α=${th.score_jitter_alpha ?? 0.2})</td><td>×0.8–1.0</td><td>J ≤ ${th.score_jitter_full ?? 0.10}</td><td>J ≥ ${th.score_jitter_zero ?? 0.25}</td></tr>
             <tr><td>Truncation (non-failure)</td><td>—</td><td colspan="2">Ref root |x| or |y| &gt; ${th.motion_xy_range} m</td></tr>
           </tbody>
@@ -524,7 +525,7 @@ function renderRanking() {
               ${!isNom ? `<td><div>${fmtDelta(r.delta_score_nom)}</div><span class="sub-val">${fmtDelta(r.delta_sr_nom, "%")}</span></td>` : ""}
               <td class="${hl("hand_all")}">${fmtNum(h.total_score, 2)}<span class="sub-val">${(h.sr * 100).toFixed(1)}% (${h.successes}/${h.n})</span></td>
               <td class="${hl("foot_only")}">${fmtNum(f.total_score, 2)}<span class="sub-val">${(f.sr * 100).toFixed(1)}% (${f.successes}/${f.n})</span></td>
-              <td class="${hl("quality")}">${fmtNum(r.mean_quality_success, 2)}<span class="sub-val">pos ${fmtNum(r.pos_score, 1)} · ori ${fmtNum(r.ori_score, 1)}</span></td>
+              <td class="${hl("quality")}" title="position_score = min(pos_rel, pos_world): rel ${fmtNum(r.pos_rel_score, 1)} / world ${fmtNum(r.pos_world_score, 1)}">${fmtNum(r.mean_quality_success, 2)}<span class="sub-val">pos ${fmtNum(r.pos_score, 1)}${r.pos_rel_score != null && r.pos_world_score != null ? ` (R${fmtNum(r.pos_rel_score, 0)}/W${fmtNum(r.pos_world_score, 0)})` : ""} · ori ${fmtNum(r.ori_score, 1)}</span></td>
               <td class="${hl("stability")}">${fmtNum(r.stab_score, 1)}</td>
             </tr>
           `;
@@ -552,6 +553,27 @@ function renderObjectTable() {
 
   const key = state.objScope === "hand" ? "by_object_hand" : "by_object";
   const objs = Object.keys(rows[0][key] || {}).sort();
+
+  if ((po && po.summary_only) || !objs.length) {
+    const note = (po && po.summary_note) || "Per-object breakdown is unavailable for this archived summary protocol; switch to 1. Nominal Baseline for full 218-clip per-object drill-down.";
+    document.getElementById("per-object-sub").textContent = "Summary-only protocol (strictly isolated — no 2026-11-23 data mixed)";
+    tbl.innerHTML = `
+      <tbody>
+        <tr>
+          <td class="empty-msg summary-only-cell">
+            <div style="margin-bottom:10px;">${esc(note)}</div>
+            <button type="button" class="btn-subtle" data-switch-nom="1">Switch to 1. Nominal Baseline (Full Breakdown) →</button>
+          </td>
+        </tr>
+      </tbody>
+    `;
+    tbl.querySelectorAll("[data-switch-nom]").forEach((btn) => {
+      btn.addEventListener("click", () => setProtocol("nominal-v1"));
+    });
+    return;
+  }
+
+  document.getElementById("per-object-sub").textContent = "Best per row is highlighted in green; click any cell to drill down into matching clips";
 
   const thead = `
     <thead>
@@ -601,6 +623,43 @@ function renderFailureTable() {
   const protoLabel = po ? po.short : "Nominal";
   const denomLabel = po && po.is_stochastic ? "436 Runs" : "218 Clips";
   document.getElementById("failure-heading").textContent = `Failure Analysis (${protoLabel} · ${denomLabel})`;
+  const tbl = document.getElementById("failure-table");
+
+  if (po && po.summary_only) {
+    const note = po.summary_note || "Multi-label failure breakdown is unavailable for this archived summary protocol; showing primary failure summary only.";
+    document.getElementById("failure-sub").textContent = "Primary failure summary from archived hoi-bfm-official-2026-11-24 results (multi-label drill-down available in Nominal)";
+    const thead = `
+      <thead>
+        <tr>
+          <th class="left">Policy</th>
+          <th>Failed / Played</th>
+          <th class="left">Top Primary Failures</th>
+        </tr>
+      </thead>
+    `;
+    const tbody = rows
+      .map((r) => {
+        const failN = r.n - r.successes;
+        return `
+          <tr>
+            <td class="left"><button class="method-btn" data-fpol="${esc(r.policy_id)}" data-ftag="failed">${esc(pName(r.policy_id))}</button></td>
+            <td><strong>${failN}</strong> <span style="color:var(--muted);">/ ${r.n}</span></td>
+            <td class="left mono" style="font-size:12px;color:var(--text-2);">${esc(r.top_fails || "—")}</td>
+          </tr>
+        `;
+      })
+      .join("");
+    tbl.innerHTML = `${thead}<tbody>${tbody}<tr><td colspan="3" class="summary-only-foot">${esc(note)} <button type="button" class="btn-subtle" style="margin-left:8px;" data-switch-nom="1">Switch to Nominal →</button></td></tr></tbody>`;
+    tbl.querySelectorAll("[data-fpol]").forEach((el) => {
+      el.addEventListener("click", () => drillToClips({ policy: el.dataset.fpol, fail: el.dataset.ftag }));
+    });
+    tbl.querySelectorAll("[data-switch-nom]").forEach((btn) => {
+      btn.addEventListener("click", () => setProtocol("nominal-v1"));
+    });
+    return;
+  }
+
+  document.getElementById("failure-sub").textContent = "Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect Nominal clips";
   const cols = ["root_jitter", "drop", "contact_recall", "incomplete", "body_z", "root_ori"];
 
   const thead = `
@@ -634,7 +693,6 @@ function renderFailureTable() {
     })
     .join("");
 
-  const tbl = document.getElementById("failure-table");
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
   tbl.querySelectorAll("[data-fpol]").forEach((el) => {
     el.addEventListener("click", () => drillToClips({ policy: el.dataset.fpol, fail: el.dataset.ftag }));
@@ -767,27 +825,32 @@ function renderClipDetail(clip) {
   const pids = state.clipsData.policies;
   const clipVids = (ds().videos || []).filter((v) => v.clip === clip.clip);
   const matchedVid = state.highlightPolicy
-    ? clipVids.find((v) => v.policy_id === state.highlightPolicy)
+    ? (clipVids.find((v) => v.policy_id === state.highlightPolicy || (Array.isArray(v.policies) && v.policies.includes(state.highlightPolicy))) || clipVids[0])
     : clipVids[0];
 
   const rowsHtml = pids
     .map((pid) => {
       const r = clip.results[pid];
       const hl = state.highlightPolicy === pid ? "row-hl" : "";
-      const hasVid = clipVids.some((v) => v.policy_id === pid);
-      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="7">—</td></tr>`;
+      const hasVid = clipVids.some((v) => v.policy_id === pid || (Array.isArray(v.policies) && v.policies.includes(pid)));
+      if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="8">—</td></tr>`;
       const badge = r.success
         ? `<span class="tag-pill tag-green">Success</span>`
         : `<span class="tag-pill tag-coral">${esc((r.fail_reasons || []).join(", ") || r.fail_reason)}</span>`;
       const contact = r.contact_exempt ? "Exempt" : r.contact_recall != null ? fmtPct(r.contact_recall) : "—";
+      const isWldCap = r.pos_rel_score != null && r.pos_world_score != null && r.pos_world_score < r.pos_rel_score - 0.05;
+      const posSub = r.pos_rel_score != null && r.pos_world_score != null
+        ? `<span class="sub-val ${isWldCap ? "wld-cap" : ""}" title="pos_rel=${fmtNum(r.pos_rel_score, 1)} / pos_world=${fmtNum(r.pos_world_score, 1)}">R${fmtNum(r.pos_rel_score, 0)} / W${fmtNum(r.pos_world_score, 0)}</span>`
+        : "";
       return `
         <tr class="${hl}">
           <td class="left mono" style="font-weight:600;">${esc(pName(pid))}${hasVid ? ` <span class="tag-pill tag-blue">Video</span>` : ""}</td>
           <td>${badge}</td>
           <td><strong>${fmtNum(r.episode_score, 2)}</strong></td>
-          <td>${fmtNum(r.quality_score, 2)}</td>
+          <td>${fmtNum(r.quality_score, 2)}${posSub}</td>
           <td class="mono">${r.root_jitter != null ? fmtNum(r.root_jitter, 3) : "—"}</td>
           <td class="mono">${r.obj_pos_err_mean != null ? `${fmtNum(r.obj_pos_err_mean, 3)} / ${fmtNum(r.obj_pos_err_final, 3)}` : "—"}</td>
+          <td class="mono">${r.obj_pos_err_world_mean != null ? `${fmtNum(r.obj_pos_err_world_mean, 3)} / ${fmtNum(r.obj_pos_err_world_final, 3)}` : "—"}</td>
           <td class="mono">${r.obj_ori_err_mean != null ? `${fmtNum(r.obj_ori_err_mean, 3)} / ${fmtNum(r.obj_ori_err_final, 3)}` : "—"}</td>
           <td>${contact}</td>
         </tr>
@@ -797,19 +860,23 @@ function renderClipDetail(clip) {
 
   let vidHtml = "";
   if (matchedVid) {
+    const vidTitle = matchedVid.kind === "multi_policy_2x3" || !matchedVid.policy_id
+      ? esc(matchedVid.title || "5-Policy 2×3 Comparison Replay")
+      : `Ghost Replay (Policy: <span class="mono">${esc(pName(matchedVid.policy_id))}</span>)`;
     vidHtml = `
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <strong style="font-size:13px;">Ghost Replay (Policy: <span class="mono">${esc(pName(matchedVid.policy_id))}</span>)</strong>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <strong style="font-size:13px;">${vidTitle}</strong>
           <span class="tag-pill tag-blue">${matchedVid.size_mb} MB</span>
         </div>
-        <video controls preload="metadata" poster="${esc(matchedVid.poster_url || "")}" style="width:100%;max-height:340px;border-radius:8px;background:#0f172a;">
+        ${matchedVid.layout ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${esc(matchedVid.layout)}</div>` : ""}
+        <video controls preload="metadata" poster="${esc(matchedVid.poster_url || "")}" style="width:100%;max-height:380px;border-radius:8px;background:#0f172a;">
           <source src="${esc(matchedVid.video_url)}" type="video/mp4" />
         </video>
       </div>
     `;
   } else if (clipVids.length && state.highlightPolicy) {
-    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">No video recorded for <code>${esc(pName(state.highlightPolicy))}</code> on this clip (recorded: ${clipVids.map((v) => pName(v.policy_id)).join(", ")}).</div>`;
+    vidHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted);">No video recorded for <code>${esc(pName(state.highlightPolicy))}</code> on this clip.</div>`;
   }
 
   el.innerHTML = `
@@ -826,10 +893,11 @@ function renderClipDetail(clip) {
             <th class="left">Policy</th>
             <th>Status</th>
             <th>Episode Score</th>
-            <th>Quality</th>
+            <th>Quality (R/W)</th>
             <th>Jitter (rad/s)</th>
-            <th>Rel Pos Err m (Mean/Final)</th>
-            <th>Rel Ori Err rad (Mean/Final)</th>
+            <th>Rel Pos m (M/F)</th>
+            <th>World Pos m (M/F)</th>
+            <th>Rel Ori rad (M/F)</th>
             <th>Contact Recall</th>
           </tr>
         </thead>
@@ -844,12 +912,15 @@ function renderClipDetail(clip) {
 function renderVideos() {
   const d = ds();
   const vids = d.videos || [];
-  const objs = [...new Set(vids.map((v) => v.object))].sort();
+  const isMulti = vids.some((v) => v.kind === "multi_policy_2x3" || !v.policy_id);
+  const filterKey = isMulti ? "interaction_type" : "object";
+  const cats = [...new Set(vids.map((v) => v[filterKey]).filter(Boolean))];
+  if (!isMulti) cats.sort();
 
   const chipsEl = document.getElementById("video-filter-chips");
   chipsEl.innerHTML =
     `<button class="chip ${state.videoObj === "all" ? "active" : ""}" data-vobj="all">All (${vids.length})</button>` +
-    objs.map((o) => `<button class="chip ${state.videoObj === o ? "active" : ""}" data-vobj="${esc(o)}">${esc(o)}</button>`).join("");
+    cats.map((c) => `<button class="chip ${state.videoObj === c ? "active" : ""}" data-vobj="${esc(c)}">${esc(isMulti ? (INTER_LABELS[c] || c) : c)}</button>`).join("");
   chipsEl.querySelectorAll(".chip").forEach((btn) => {
     btn.addEventListener("click", () => {
       state.videoObj = btn.dataset.vobj;
@@ -870,37 +941,82 @@ function renderVideos() {
         </video>
       </div>
     `;
+  } else if (isMulti && vids.length) {
+    feat.innerHTML = `
+      <div class="video-layout-bar">
+        <strong>5-Policy 2×3 Grid Layout</strong>
+        <span>Top: <code>zl_v92</code> · <code>tq3e5</code> · <code>scalebfm</code> &nbsp;|&nbsp; Bottom: <code>clf</code> · <code>amp</code> · <code>11-24 Score Card</code></span>
+      </div>
+    `;
+  } else {
+    feat.innerHTML = "";
   }
 
-  const shown = state.videoObj === "all" ? vids : vids.filter((v) => v.object === state.videoObj);
+  const shown = state.videoObj === "all" ? vids : vids.filter((v) => v[filterKey] === state.videoObj);
   const grid = document.getElementById("videos-grid");
+  const SHORT_POL = {
+    zl_v92_20261108: "v92",
+    partymimic_hoi_tq3e5_20261123: "tq3e5",
+    scalebfm_oa_s42_raw: "scalebfm",
+    clf_hoi_20261104: "clf",
+    amp_a_s43_raw: "amp",
+  };
+
   grid.innerHTML = shown
-    .map(
-      (v) => `
-      <div class="video-card">
-        <video controls preload="metadata" poster="${esc(v.poster_url || "")}">
-          <source src="${esc(v.video_url)}" type="video/mp4" />
-        </video>
-        <div class="video-body">
-          <div class="video-title">${esc(v.clip)}</div>
-          <div class="clip-row-tags">
-            <span class="tag-pill">${esc(v.object)}</span>
-            <span class="tag-pill">${esc(INTER_LABELS[v.interaction_type] || v.interaction_type)}</span>
-            <span class="tag-pill ${v.success ? "tag-green" : "tag-coral"}">${v.success ? `Score ${fmtNum(v.episode_score, 1)}` : "Fail (0)"}</span>
+    .map((v) => {
+      if (v.kind === "multi_policy_2x3" || !v.policy_id) {
+        const scorePills = (v.policy_scores || [])
+          .map((ps) => {
+            const sn = SHORT_POL[ps.policy_id] || pName(ps.policy_id);
+            const cls = ps.success ? "tag-green" : "tag-coral";
+            const txt = ps.success ? `${sn} ${fmtNum(ps.episode_score, 1)}` : `${sn} 0 (${ps.fail_reason || "fail"})`;
+            return `<span class="tag-pill ${cls}">${esc(txt)}</span>`;
+          })
+          .join("");
+        return `
+          <div class="video-card">
+            <video controls preload="metadata" poster="${esc(v.poster_url || "")}">
+              <source src="${esc(v.video_url)}" type="video/mp4" />
+            </video>
+            <div class="video-body">
+              <div class="video-title">${esc(v.title || v.clip)}</div>
+              <div class="clip-row-tags">
+                <span class="tag-pill tag-blue">${esc(INTER_LABELS[v.interaction_type] || v.interaction_type)}</span>
+                <span class="tag-pill">${esc(v.object)}</span>
+                <span class="tag-pill">${v.size_mb} MB · H.264</span>
+              </div>
+              ${scorePills ? `<div class="clip-row-tags">${scorePills}</div>` : ""}
+              ${v.highlight ? `<div class="video-highlight">${esc(v.highlight)}</div>` : ""}
+              <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="all">Inspect Clip Diagnostics →</button>
+            </div>
           </div>
-          <div class="video-meta">
-            <span class="mono">${esc(pName(v.policy_id))}</span>
-            <span>Mean pos err ${v.obj_pos_err_mean != null ? `${fmtNum(v.obj_pos_err_mean, 3)} m` : "—"}</span>
+        `;
+      }
+      return `
+        <div class="video-card">
+          <video controls preload="metadata" poster="${esc(v.poster_url || "")}">
+            <source src="${esc(v.video_url)}" type="video/mp4" />
+          </video>
+          <div class="video-body">
+            <div class="video-title">${esc(v.clip)}</div>
+            <div class="clip-row-tags">
+              <span class="tag-pill">${esc(v.object)}</span>
+              <span class="tag-pill">${esc(INTER_LABELS[v.interaction_type] || v.interaction_type)}</span>
+              <span class="tag-pill ${v.success ? "tag-green" : "tag-coral"}">${v.success ? `Score ${fmtNum(v.episode_score, 1)}` : "Fail (0)"}</span>
+            </div>
+            <div class="video-meta">
+              <span class="mono">${esc(pName(v.policy_id))}</span>
+              <span>Mean pos err ${v.obj_pos_err_mean != null ? `${fmtNum(v.obj_pos_err_mean, 3)} m` : "—"}</span>
+            </div>
+            <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="${esc(v.policy_id)}">Inspect Diagnostics →</button>
           </div>
-          <button type="button" class="btn-subtle" data-vc="${esc(v.clip)}" data-vp="${esc(v.policy_id)}">Inspect Diagnostics →</button>
         </div>
-      </div>
-    `
-    )
+      `;
+    })
     .join("");
 
   grid.querySelectorAll("[data-vc]").forEach((btn) => {
-    btn.addEventListener("click", () => drillToClips({ clip: btn.dataset.vc, policy: btn.dataset.vp }));
+    btn.addEventListener("click", () => drillToClips({ clip: btn.dataset.vc, policy: btn.dataset.vp || "all" }));
   });
 }
 

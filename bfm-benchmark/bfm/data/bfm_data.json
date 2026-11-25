@@ -4,7 +4,7 @@
   "physics_dt_ms": 2,
   "friction": 1.0,
   "primary_metric": "success_rate",
-  "updated_date": "2026-11-24",
+  "updated_date": "2026-11-25",
   "description": "BFM Benchmark evaluates humanoid whole-body motion-tracking policies under unified physics protocols (Nominal v2 baseline and Sim2Real-P0 real-world hardware alignment). Policies run in isolated worker processes with per-step PD recomputation and independent trace verification.",
   "scoring_summary": "Policies are evaluated per protocol without cross-protocol averaging. Failure rules follow SuperMimic Appendix A: root height error > 0.25 m or projected unit-gravity Z error > 0.8 (end-effector deviation is not a failure condition). We report Success Rate, Mean Completion, Full/Prefix XY-aligned MPBPE (mm), XY+Yaw MPBPE (mm), and Joint MAE (rad).",
   "protocols": [
@@ -275,18 +275,6 @@
       }
     },
     {
-      "id": "lafan-g1-29dof",
-      "name": "G1 · LAFAN1 (40 Clips)",
-      "robot": "Unitree G1 (29 DoF)",
-      "mjcf": "robots/g1-29dof-cpu-v0.xml",
-      "clips": 40,
-      "source_fps": 30,
-      "physics_dt": "2 ms",
-      "status": "Awaiting motionchallenge-verify results",
-      "policies_supported": "SuperMimic (40k CPU FP32) / PartyMimic G1 MLP",
-      "protocols": {}
-    },
-    {
       "id": "roban-s17-21dof-sub1-suitcase-070",
       "name": "Roban S17 · Onboarding Clip (1 Clip)",
       "robot": "Roban S17 (21 DoF)",
@@ -300,6 +288,11 @@
     }
   ],
   "news": [
+    {
+      "date": "2026-11-25",
+      "tag": "Track Aligned",
+      "text": "Aligned BFM leaderboard with the official policy registry (Roban S17 21-DoF LAFAN1-77 5 policies × 2 protocols + single-clip onboarding suite), updated CLI verification examples, and switched protocol/suite metadata to dynamic manifest rendering."
+    },
     {
       "date": "2026-11-24",
       "tag": "Results Live",
@@ -318,12 +311,12 @@
     {
       "date": "2026-11-18",
       "tag": "Suite & Adapter",
-      "text": "Added Roban S17 21-DoF MJCF profile, single-clip validation suite, and PartyMimic adapters (G1 & Roban S17)."
+      "text": "Added Roban S17 21-DoF MJCF profile, single-clip validation suite, and PartyMimic / Sparse4 adapters."
     },
     {
       "date": "2026-11-15",
       "tag": "Baseline Ready",
-      "text": "Initialized BFM Protocol v2 evaluator on MuJoCo 3.17.0 with Unitree G1 29-DoF LAFAN1 (40 clips) and SuperMimic adapter."
+      "text": "Initialized BFM Protocol v2 evaluator on MuJoCo 3.17.0 with isolated worker rollout and trace_consistent verification."
     }
   ]
 }

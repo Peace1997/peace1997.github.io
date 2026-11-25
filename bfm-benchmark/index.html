@@ -246,7 +246,7 @@
             <h2 class="track-title">BFM · Whole-Body Motion Tracking</h2>
             <span class="badge badge-green">Live · 5 Policies (2 Protocols)</span>
           </div>
-          <p class="track-desc">Standardized MuJoCo 3.17.0 evaluation for Roban S17 (LAFAN1 77 clips, 50 Hz) &amp; G1 across Nominal v2 and Sim2Real-P0 stress protocols.</p>
+          <p class="track-desc">Standardized MuJoCo 3.17.0 evaluation for Roban S17 (LAFAN1 77 clips, 50 Hz) across Nominal v2 and Sim2Real-P0 stress protocols with <code>trace_consistent</code> verification.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./bfm/">Open BFM Track →</a>
@@ -259,7 +259,7 @@
             <h2 class="track-title">HOI-BFM · Human-Object Interaction</h2>
             <span class="badge badge-green">Live · 8 Policies (6 Protocols)</span>
           </div>
-          <p class="track-desc">Closed-loop simulation benchmark (<code>hoi-bfm-official-2026-11-23</code>) across 6 progressive Sim2Real protocols (Nominal → Full DR) with per-clip diagnostics and ghost replays.</p>
+          <p class="track-desc">Closed-loop simulation benchmark (<code>hoi-bfm-official-2026-11-24</code>, <code>min(pos_rel, pos_world)</code> World 3D cap) across 6 progressive Sim2Real protocols (Nominal → Full DR) with per-clip diagnostics and 5-policy 2×3 side-by-side replays.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./hoi-bfm-benchmark/">Open HOI-BFM Track →</a>
@@ -271,6 +271,11 @@
       <h2>News</h2>
       <p class="news-sub">Policy onboarding log and benchmark release history</p>
       <ul class="news-list">
+        <li class="news-item">
+          <span class="news-date mono">2026-11-25</span>
+          <span><span class="badge badge-green">Standard &amp; Media</span></span>
+          <span>Upgraded HOI-BFM to <code>hoi-bfm-official-2026-11-24</code> (<code>position_score = min(pos_rel_score, pos_world_score)</code>, World 3D 0.20–1.00 m cap) across all 8 policies × 6 Sim2Real protocols, replaced Ghost Replays with 3 five-policy 2×3 comparison videos, and aligned BFM track exclusively to Roban S17 (LAFAN1-77 5×2).</span>
+        </li>
         <li class="news-item">
           <span class="news-date mono">2026-11-24</span>
           <span><span class="badge badge-green">Multi-Protocol</span></span>
@@ -294,7 +299,7 @@
         <li class="news-item">
           <span class="news-date mono">2026-11-18</span>
           <span><span class="badge badge-blue">BFM Track</span></span>
-          <span>Added Roban S17 21-DoF profile and PartyMimic adapter under BFM Protocol v2 alongside G1 LAFAN1 (40 clips).</span>
+          <span>Added Roban S17 21-DoF profile and PartyMimic / Sparse4 adapters under BFM Protocol v2.</span>
         </li>
         <li class="news-item">
           <span class="news-date mono">2026-11-11</span>
