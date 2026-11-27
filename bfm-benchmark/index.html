@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="description" content="BFM BenchMark · Leaderboard 0.1 — Unified Humanoid BFM & HOI-BFM Evaluation" />
+  <link rel="icon" href="data:," />
   <title>BFM BenchMark · Leaderboard 0.1</title>
   <style>
     :root {
@@ -244,9 +245,9 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">BFM · Whole-Body Motion Tracking</h2>
-            <span class="badge badge-green">Live · 5 Policies (2 Protocols)</span>
+            <span class="badge badge-green">Live · 13 Policies (2 Protocols)</span>
           </div>
-          <p class="track-desc">Standardized MuJoCo 3.17.0 evaluation for Roban S17 (LAFAN1 77 clips, 50 Hz) across Nominal v2 and Sim2Real-P0 stress protocols with <code>trace_consistent</code> verification.</p>
+          <p class="track-desc">Standardized MuJoCo 3.17.0 evaluation for Roban S17 across full LAFAN1 (77 clips, 50 Hz) and flat-ground 7-metric rescore (62 clips) under Nominal v2 and Sim2Real-P0 stress protocols with <code>trace_consistent</code> verification.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./bfm/">Open BFM Track →</a>
@@ -257,9 +258,9 @@
         <div>
           <div class="track-head">
             <h2 class="track-title">HOI-BFM · Human-Object Interaction</h2>
-            <span class="badge badge-green">Live · 8 Policies (6 Protocols)</span>
+            <span class="badge badge-green">Live · 13 Policies (6 Protocols)</span>
           </div>
-          <p class="track-desc">Closed-loop simulation benchmark (<code>hoi-bfm-official-2026-11-24</code>, <code>min(pos_rel, pos_world)</code> World 3D cap) across 6 progressive Sim2Real protocols (Nominal → Full DR) with per-clip diagnostics and 5-policy 2×3 side-by-side replays.</p>
+          <p class="track-desc">Closed-loop simulation benchmark (<code>hoi-bfm-official-2026-11-24</code>, <code>min(pos_rel, pos_world)</code> World 3D cap) across 13 policies × 6 progressive Sim2Real protocols (Nominal → Full DR) with per-clip diagnostics and 5-policy 2×3 side-by-side replays.</p>
         </div>
         <div class="track-foot">
           <a class="btn-primary" href="./hoi-bfm-benchmark/">Open HOI-BFM Track →</a>
@@ -271,6 +272,11 @@
       <h2>News</h2>
       <p class="news-sub">Policy onboarding log and benchmark release history</p>
       <ul class="news-list">
+        <li class="news-item">
+          <span class="news-date mono">2026-11-27</span>
+          <span><span class="badge badge-green">Policies Added</span></span>
+          <span>Expanded both tracks to 13 policies: onboarded <code>zl_20261126_partymimic_hoi_vclip20_120000</code> (tied #1 on BFM LAFAN1-77 P0 at 46/77), <code>partymimic_hoi_terrain_vclip20_120000</code> (54/62 Sustained P0), <code>zl_20261123_partymimic_tq3e5_120000</code>, and recent BFM/HOI variants across the 62-clip 7-metric rescore and all 6 HOI-BFM Sim2Real protocols (<code>hoi-bfm-official-2026-11-24</code>).</span>
+        </li>
         <li class="news-item">
           <span class="news-date mono">2026-11-25</span>
           <span><span class="badge badge-green">Standard &amp; Media</span></span>

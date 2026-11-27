@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="icon" href="data:," />
   <title>BFM BenchMark · Leaderboard 0.1</title>
-  <link rel="stylesheet" href="styles.css?v=20261125110322" />
+  <link rel="stylesheet" href="styles.css?v=20261127121200" />
 </head>
 <body>
   <header class="topbar">
@@ -152,10 +153,16 @@
       <section id="clips" class="section-card">
         <div class="board-head">
           <div>
-            <h2 class="sec-h2">Per-Clip Diagnostics (Nominal · 218 Clips)</h2>
-            <p class="sec-sub">Filter all 218 clips by object, interaction type, policy failure tag, or A/B policy disagreement</p>
+            <h2 class="sec-h2" id="clips-heading">Per-Clip Diagnostics (Nominal · 218 Clips)</h2>
+            <p class="sec-sub" id="clips-sub">Filter all 218 clips by protocol, object, interaction type, policy failure tag, or A/B policy disagreement</p>
           </div>
           <button class="btn-subtle" id="clip-reset-btn" type="button">Reset Filters</button>
+        </div>
+
+        <div class="proto-bar" style="margin-bottom:12px;">
+          <span class="ctrl-label">Protocol</span>
+          <select id="clip-proto-filter" class="select select-sm"></select>
+          <span id="clip-proto-note" style="font-size:12px;color:var(--muted);"></span>
         </div>
 
         <div class="clip-controls">
@@ -240,6 +247,6 @@
     </main>
   </div>
 
-  <script type="module" src="app.js?v=20261125110322"></script>
+  <script type="module" src="app.js?v=20261127121200"></script>
 </body>
 </html>

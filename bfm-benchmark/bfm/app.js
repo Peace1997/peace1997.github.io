@@ -11,7 +11,33 @@ const LOWER_BETTER = new Set([
   "prefix_xy_aligned_mm",
   "mpjpe_xy_yaw_aligned_mm",
   "joint_mae_rad",
+  "full_xy_mm",
+  "torso_xy_mm",
+  "legs_xy_mm",
+  "arms_xy_mm",
+  "ep_p95_mm",
+  "slip_2mm_mms",
+  "vel_gt80_pct",
 ]);
+
+const SORT_OPTIONS = {
+  lafan77: [
+    ["success_rate", "Success Rate (↑)"],
+    ["completion", "Completion (↑)"],
+    ["mpjpe_xy_aligned_mm", "Full XY (↓)"],
+    ["prefix_xy_aligned_mm", "Prefix XY (↓)"],
+    ["mpjpe_xy_yaw_aligned_mm", "XY+Yaw (↓)"],
+    ["joint_mae_rad", "Joint MAE (↓)"],
+  ],
+  rescore62_7metrics: [
+    ["sustained_sr", "Sustained 0.3s (↑)"],
+    ["win10s_pct", "10s Window (↑)"],
+    ["strict_sr", "Strict SR (↑)"],
+    ["full_xy_mm", "Full XY (↓)"],
+    ["slip_2mm_mms", "2mm Slip (↓)"],
+    ["vel_gt80_pct", "Vel>80% (↓)"],
+  ],
+};
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
@@ -30,16 +56,18 @@ function fmtDeltaErr(v) {
 }
 
 async function init() {
-  const res = await fetch("data/bfm_data.json?v=20261125110322", { cache: "no-store" });
+  const res = await fetch("data/bfm_data.json?v=20261127121200", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load data/bfm_data.json");
   state.data = await res.json();
   state.suiteId = state.data.suites[0].id;
+  state.sortBy = currentMode() === "rescore62_7metrics" ? "sustained_sr" : "success_rate";
 
   bindEvents();
   setupScrollSpy();
   renderSetting();
   renderProtoChips();
   renderSuiteChips();
+  renderSortChips();
   renderRanking();
   renderAlignmentTable();
   renderSuitesTable();
@@ -50,6 +78,10 @@ function currentSuite() {
   return state.data.suites.find((s) => s.id === state.suiteId) || state.data.suites[0];
 }
 
+function currentMode() {
+  return currentSuite().metric_mode || "lafan77";
+}
+
 function protoMeta(pid) {
   return (state.data.protocols || []).find((p) => p.id === pid);
 }
@@ -58,6 +90,18 @@ function setProtocol(pid) {
   state.protocolId = pid;
   renderProtoChips();
   renderRanking();
+}
+
+function renderSortChips() {
+  const mode = currentMode();
+  const opts = SORT_OPTIONS[mode] || SORT_OPTIONS.lafan77;
+  if (!opts.some(([k]) => k === state.sortBy)) {
+    state.sortBy = opts[0][0];
+  }
+  const el = document.getElementById("bfm-sort-chips");
+  el.innerHTML = opts
+    .map(([k, lbl]) => `<button class="chip ${state.sortBy === k ? "active" : ""}" data-sort="${esc(k)}">${esc(lbl)}</button>`)
+    .join("");
 }
 
 function bindEvents() {
@@ -95,6 +139,7 @@ function setupScrollSpy() {
 function renderSetting() {
   const d = state.data;
   const suite = currentSuite();
+  const mode = currentMode();
   const protos = d.protocols || [];
   const nomProto = protoMeta("nominal") || protos[0];
   const p0Proto = protoMeta("sim2real-p0") || protos[1];
@@ -104,13 +149,20 @@ function renderSetting() {
 
   document.getElementById("bfm-desc").innerHTML = `
     Whole-body humanoid motion-tracking benchmark under unified <strong>${esc(d.protocol_version)}</strong> (${esc(d.engine)}).<br />
-    Policies run in isolated worker processes with per-step PD recomputation and independent trace verification; Nominal and Sim2Real-P0 protocols are strictly isolated by <code>protocol_sha256</code>.
+    Policies run in isolated worker processes with per-step PD recomputation and independent trace verification; Nominal and Sim2Real-P0 protocols and 77-clip vs 62-clip flat-ground suites are strictly isolated by <code>protocol_sha256</code>.
   `;
-  document.getElementById("bfm-scoring").innerHTML = `
-    <li><strong>Success &amp; Completion</strong>: Zero failures through planned horizon; Completion = pre-failure duration ÷ total duration (macro-averaged across clips).</li>
-    <li><strong>Failure Rules</strong>: Root height error &gt; 0.25 m or projected gravity Z error &gt; 0.8 (SuperMimic Appendix A; end-effector deviation is not a failure condition).</li>
-    <li><strong>Tracking Accuracy</strong>: Full-motion &amp; Prefix XY-aligned MPBPE (mm ↓), XY+Yaw MPBPE (mm ↓), and Joint MAE (rad ↓); every result verified via <code>motionchallenge-verify</code>.</li>
-  `;
+  const scoringHtml = mode === "rescore62_7metrics"
+    ? `
+      <li><strong>Flat-Ground 62-Clip Filter</strong>: Excludes 15 high-climb <code>obstacles*</code> clips (&gt;0.25 m pelvis lift) incompatible with flat-ground MJCF; keeps 62 flat-ground clips (strictly separate from the 77-clip suite).</li>
+      <li><strong>1. Stability</strong>: <em>Sustained SR</em> (0.30 s / ≥15 consecutive failure frames) &amp; <em>10s Window Pass Rate</em> (plus <em>Strict SR</em> in diagnostics).</li>
+      <li><strong>2–4. Accuracy, Contact &amp; Hardware</strong>: XY-aligned MPBPE (Full / Torso / Legs / Arms / Endpoint p95 mm), 2 mm Sole Slip (mm/s, &gt;60 mm/s flagged), and Joint Vel &gt;80% limit share.</li>
+    `
+    : `
+      <li><strong>Success &amp; Completion</strong>: Zero failures through planned horizon; Completion = pre-failure duration ÷ total duration (macro-averaged across clips).</li>
+      <li><strong>Failure Rules</strong>: Root height error &gt; 0.25 m or projected gravity Z error &gt; 0.8 (SuperMimic Appendix A; end-effector deviation is not a failure condition).</li>
+      <li><strong>Tracking Accuracy</strong>: Full-motion &amp; Prefix XY-aligned MPBPE (mm ↓), XY+Yaw MPBPE (mm ↓), and Joint MAE (rad ↓); every result verified via <code>motionchallenge-verify</code>.</li>
+    `;
+  document.getElementById("bfm-scoring").innerHTML = scoringHtml;
   document.getElementById("bfm-details").innerHTML = `
     <div class="details-grid">
       <div>
@@ -177,8 +229,10 @@ function renderSuiteChips() {
     btn.addEventListener("click", () => {
       state.suiteId = btn.dataset.suite;
       el.querySelectorAll(".chip").forEach((b) => b.classList.toggle("active", b === btn));
+      state.sortBy = currentMode() === "rescore62_7metrics" ? "sustained_sr" : "success_rate";
       renderSetting();
       renderProtoChips();
+      renderSortChips();
       renderRanking();
     });
   });
@@ -186,6 +240,7 @@ function renderSuiteChips() {
 
 function renderRanking() {
   const suite = currentSuite();
+  const mode = currentMode();
   const hasProtos = suite.protocols && Object.keys(suite.protocols).length > 0;
   const isOverview = state.protocolId === "overview" && hasProtos;
 
@@ -204,6 +259,11 @@ function renderRanking() {
       <thead><tr><th>Rank</th><th class="left">Policy</th><th>Success Rate</th><th>Completion</th><th>Full XY (mm)</th></tr></thead>
       <tbody><tr><td colspan="5" class="empty-msg">No verified full-suite results imported yet for <strong>${esc(suite.id)}</strong>.</td></tr></tbody>
     `;
+    return;
+  }
+
+  if (mode === "rescore62_7metrics") {
+    renderRanking62(suite, isOverview, medals, tbl);
     return;
   }
 
@@ -285,7 +345,7 @@ function renderRanking() {
   document.getElementById("bfm-spec-line").textContent = `${pm.desc}  |  protocol_id: ${pm.protocol_id}`;
   document.getElementById("bfm-rank-heading").textContent = `${pm.label} · ${suite.name}`;
   document.getElementById("bfm-rank-sub").textContent =
-    `Robot: ${suite.robot} · Clips: ${suite.clips} (${suite.source_fps} Hz) · Physics dt: ${suite.physics_dt} · Latest update: ${state.data.updated_date || "2026-11-24"}`;
+    `Robot: ${suite.robot} · Clips: ${suite.clips} (${suite.source_fps} Hz) · Physics dt: ${suite.physics_dt} · Latest update: ${state.data.updated_date || "2026-11-27"}`;
 
   const bestSr = Math.max(...rows.map((r) => r.success_rate));
   const bestComp = Math.max(...rows.map((r) => r.completion));
@@ -335,6 +395,146 @@ function renderRanking() {
         }
       </tr>
     `)
+    .join("");
+  tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
+}
+
+function renderRanking62(suite, isOverview, medals, tbl) {
+  if (isOverview) {
+    const nomProto = protoMeta("nominal") || state.data.protocols[0];
+    const p0Proto = protoMeta("sim2real-p0") || state.data.protocols[1];
+    const nomMap = Object.fromEntries((suite.protocols.nominal || []).map((r) => [r.policy_id, r]));
+    const p0Rows = [...(suite.protocols["sim2real-p0"] || [])].sort(
+      (a, b) => b.sustained_sr - a.sustained_sr || b.win10s_pct - a.win10s_pct || a.full_xy_mm - b.full_xy_mm
+    );
+    document.getElementById("bfm-proto-badge").textContent = "62-Clip Flat · Nom vs P0";
+    document.getElementById("bfm-spec-line").textContent =
+      `Suite: ${suite.id} (62 flat-ground clips, 15 high-climb obstacle clips excluded)  |  Sorted by P0 Sustained 0.3s SR without cross-protocol averaging`;
+    document.getElementById("bfm-rank-heading").textContent = `Cross-Protocol Matrix (7-Metric) · ${suite.name}`;
+    document.getElementById("bfm-rank-sub").textContent =
+      `Robot: ${suite.robot} · 62 Flat-Ground Clips (${suite.source_fps} Hz) · Sustained ≥0.30s · 2mm Slip Warning >60 mm/s`;
+
+    const thead = `
+      <thead>
+        <tr>
+          <th style="width:54px;">Rank</th>
+          <th class="left">Policy</th>
+          <th class="left">Ref Input</th>
+          <th class="th-jump" data-jump-proto="nominal">${esc(nomProto?.short || "Nominal")} ↗<span class="sub-val mono">sha:${esc(nomProto?.protocol_sha || "—")}</span></th>
+          <th class="th-jump" data-jump-proto="sim2real-p0">${esc(p0Proto?.short || "Sim2Real-P0")} ↗<span class="sub-val mono">sha:${esc(p0Proto?.protocol_sha || "—")}</span></th>
+          <th>P0 Degradation (Δ vs Nominal)</th>
+        </tr>
+      </thead>
+    `;
+    const fmtCell = (r) => {
+      if (!r) return "—";
+      const slipWarn = r.slip_2mm_mms > 60 ? ` <span class="tag-pill tag-coral">Slip!</span>` : "";
+      return `
+        <div><strong>${r.sustained_sr.toFixed(2)}%</strong> (${r.sustained_succ}/${r.n}) · 10s <strong>${r.win10s_pct.toFixed(2)}%</strong></div>
+        <span class="sub-val">XY ${r.full_xy_mm.toFixed(2)} mm · Slip ${r.slip_2mm_mms.toFixed(1)} mm/s${slipWarn}</span>
+      `;
+    };
+    const tbody = p0Rows
+      .map((p0, i) => {
+        const nom = nomMap[p0.policy_id];
+        return `
+          <tr>
+            <td>${i < 3 ? `<span class="medal">${medals[i]}</span>` : `<span class="rank-num">#${i + 1}</span>`}</td>
+            <td class="left mono" style="font-weight:700;">${esc(p0.policy_id)}</td>
+            <td class="left"><span class="tag-pill" title="${esc(p0.ref_desc)}">${esc(p0.ref_tag)}</span></td>
+            <td>${fmtCell(nom)}</td>
+            <td>${fmtCell(p0)}</td>
+            <td>
+              <div>Sust ${fmtDeltaRate(p0.delta_sustained_nom, -12.0, -18.0)} · 10s ${fmtDeltaRate(p0.delta_win10s_nom, -2.5, -3.5)}</div>
+              <span class="sub-val">Full XY ${fmtDeltaErr(p0.delta_full_xy_nom)}</span>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+    tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
+    tbl.querySelectorAll("[data-jump-proto]").forEach((th) => {
+      th.addEventListener("click", () => setProtocol(th.dataset.jumpProto));
+    });
+    return;
+  }
+
+  const pm = protoMeta(state.protocolId) || state.data.protocols[0];
+  const isP0 = pm.id === "sim2real-p0";
+  const rows = [...(suite.protocols[pm.id] || [])];
+  rows.sort((a, b) => {
+    const av = a[state.sortBy] ?? 0;
+    const bv = b[state.sortBy] ?? 0;
+    if (av !== bv) return LOWER_BETTER.has(state.sortBy) ? av - bv : bv - av;
+    if (b.sustained_sr !== a.sustained_sr) return b.sustained_sr - a.sustained_sr;
+    if (b.win10s_pct !== a.win10s_pct) return b.win10s_pct - a.win10s_pct;
+    return a.full_xy_mm - b.full_xy_mm;
+  });
+
+  document.getElementById("bfm-proto-badge").textContent = `${pm.short} · 62-Clip · sha:${pm.protocol_sha}`;
+  document.getElementById("bfm-spec-line").textContent =
+    `${pm.desc}  |  62 flat-ground clips (15 obstacle clips excluded) · Sustained failure ≥0.30s (15 frames) · 2mm Sole Slip >60 mm/s flagged`;
+  document.getElementById("bfm-rank-heading").textContent = `${pm.label} · ${suite.name}`;
+  document.getElementById("bfm-rank-sub").textContent =
+    `Robot: ${suite.robot} · 62 Flat-Ground Clips (${suite.source_fps} Hz) · Physics dt: ${suite.physics_dt} · Latest update: ${state.data.updated_date || "2026-11-27"}`;
+
+  const bestSust = Math.max(...rows.map((r) => r.sustained_sr));
+  const bestWin = Math.max(...rows.map((r) => r.win10s_pct));
+  const bestFullXy = Math.min(...rows.map((r) => r.full_xy_mm));
+  const bestSlip = Math.min(...rows.map((r) => r.slip_2mm_mms));
+  const bestVel = Math.min(...rows.map((r) => r.vel_gt80_pct));
+  const bestStrict = Math.max(...rows.map((r) => r.strict_sr));
+
+  const hl = (k) => (state.sortBy === k ? "col-hl" : "");
+  const thead = `
+    <thead>
+      <tr>
+        <th style="width:54px;">Rank</th>
+        <th class="left">Policy</th>
+        <th class="left">Ref Input</th>
+        <th class="${hl("sustained_sr")}">Sustained 0.3s (↑)</th>
+        <th class="${hl("win10s_pct")}">10s Window (↑)</th>
+        ${isP0 ? `<th>Δ vs Nom</th>` : ""}
+        <th class="${hl("full_xy_mm")}">Full XY (mm ↓)</th>
+        <th>Torso / Legs / Arms</th>
+        <th>EP p95 (mm)</th>
+        <th class="${hl("slip_2mm_mms")}">2mm Slip (mm/s ↓)</th>
+        <th class="${hl("vel_gt80_pct")}">Vel&gt;80% (↓)</th>
+        ${state.showDiag ? `<th class="${hl("strict_sr")}">Strict SR</th><th>Comp</th><th>Joint MAE</th><th>Drift / EP99</th>` : ""}
+      </tr>
+    </thead>
+  `;
+
+  const tbody = rows
+    .map((r, i) => {
+      const slipWarn = r.slip_2mm_mms > 60;
+      return `
+        <tr>
+          <td>${i < 3 ? `<span class="medal">${medals[i]}</span>` : `<span class="rank-num">#${i + 1}</span>`}</td>
+          <td class="left mono" style="font-weight:700;">${esc(r.policy_id)}</td>
+          <td class="left"><span class="tag-pill" title="${esc(r.ref_desc)}">${esc(r.ref_tag)}</span></td>
+          <td class="${hl("sustained_sr")} ${r.sustained_sr === bestSust ? "cell-best" : ""}">${r.sustained_sr.toFixed(2)}%<span class="sub-val">${r.sustained_succ} / ${r.n} (Strict ${r.strict_succ})</span></td>
+          <td class="${hl("win10s_pct")} ${r.win10s_pct === bestWin ? "cell-best" : ""}">${r.win10s_pct.toFixed(2)}%</td>
+          ${isP0 ? `<td><div>${fmtDeltaRate(r.delta_sustained_nom, -12.0, -18.0)}</div><span class="sub-val">10s ${fmtDeltaRate(r.delta_win10s_nom, -2.5, -3.5)}</span></td>` : ""}
+          <td class="${hl("full_xy_mm")} ${r.full_xy_mm === bestFullXy ? "cell-best" : ""}">${r.full_xy_mm.toFixed(2)}</td>
+          <td class="mono">${r.torso_xy_mm.toFixed(1)} / ${r.legs_xy_mm.toFixed(1)} / ${r.arms_xy_mm.toFixed(1)}</td>
+          <td class="mono">${r.ep_p95_mm.toFixed(1)}</td>
+          <td class="${hl("slip_2mm_mms")} ${slipWarn ? "cell-warn" : r.slip_2mm_mms === bestSlip ? "cell-best" : ""}">
+            <div>${r.slip_2mm_mms.toFixed(1)}${slipWarn ? ` <span class="tag-pill tag-coral">Slip</span>` : ""}</div>
+            <span class="sub-val">cov ${r.slip_2mm_cov_pct.toFixed(1)}%</span>
+          </td>
+          <td class="${hl("vel_gt80_pct")} ${r.vel_gt80_pct === bestVel ? "cell-best" : ""} mono">${r.vel_gt80_pct.toFixed(3)}%</td>
+          ${
+            state.showDiag
+              ? `<td class="${hl("strict_sr")} ${r.strict_sr === bestStrict ? "cell-best" : ""} mono">${r.strict_sr.toFixed(2)}%</td>
+                 <td class="mono">${r.completion_pct.toFixed(2)}%</td>
+                 <td class="mono">${r.joint_mae_rad.toFixed(4)}</td>
+                 <td class="mono">${r.root_xy_m.toFixed(2)} m / ${r.ep_p99_mm.toFixed(1)} mm</td>`
+              : ""
+          }
+        </tr>
+      `;
+    })
     .join("");
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
 }

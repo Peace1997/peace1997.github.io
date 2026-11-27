@@ -1,20 +1,25 @@
 {
-  "snapshot_version": "20261125-110322",
+  "snapshot_version": "20261127-121037",
   "fingerprint": {
     "metric_standard": "hoi-bfm-official-2026-11-24",
     "eval_commit": "eaa046c60055",
-    "exported_at": "2026-11-25T11:03:22+08:00",
+    "exported_at": "2026-11-27T12:10:37+08:00",
     "registry_sha256": "1bcff9e888031e01478a31c1dbbc3778a8298fb74e8ff97a295d94bab49c96f9",
     "dataset_clipset_sha256": {
       "clean_218": "b520791c0ed0786f4e0523325de124d30932eea14273bab2499330937ba08798"
     },
     "policy_sha256": {
       "amp_a_s43_raw": "18895935b0a6bf44c510839b15df59fef0f64696226d115316b69766ddd5f859",
+      "amp_hbandrand": "559a9fb90f93d95e05e89f4cad562f1b70ed26725cd7d28f89085523eea34490",
       "clf_hoi_20261104": "cc83b02fd39cc800330e3c9973de321a2ae2171ed83902d4be20ebac30ccb24a",
       "hsw_hoi_20261108": "a9b8dbeea985f9b160181b775785a18eb146bde0742f6404e5c9e032854c1447",
       "partymimic_hoi_pushL_20261123": "03fab84a491c6b033f3a28ff4f08b2d2760012032f76e76547b900337ac175cf",
+      "partymimic_hoi_terrain_vclip20_120000": "ceb697ce34385816f247c77da5647c1c9477aefe63b014248fee051d9de96829",
       "partymimic_hoi_tq3e5_20261123": "9114fb91ab44c04afe61588bb6f90e04f2118ec0a2938b77f9afd6d33273f935",
+      "scalebfm_hrnd": "4ffd4bd9c91e1b108e5140d28293108d125528d70ffa3c8cb3a617a0fcd59015",
       "scalebfm_oa_s42_raw": "4e9047e7d00f9a9eb7f16ec48ad15c3a332c48da8ddc9cb9e2eec5eab4a8aa98",
+      "zl_20261123_partymimic_tq3e5_120000": "8703bf332acb46909cc93a503c4ea9283e51d03eba4d1aabea172ba56aca6f76",
+      "zl_20261126_partymimic_hoi_vclip20_120000": "ad402f7d1298e202de100897d0473de551e8c9b03ee4d56672f989ee3530c358",
       "zl_v63_prop_20261105": "297865dcdfa502f9b4b1e29cb8dbaa1e88eb2b4a639d45943d710eefb787b0b2",
       "zl_v92_20261108": "18509f8dfd7cfb0bfe405779760ece1a5b7e2d4912038ea75fa86022b4e460e2"
     }
@@ -22,7 +27,7 @@
   "datasets": {
     "clean_218": {
       "clip_count": 218,
-      "policies": 8,
+      "policies": 13,
       "protocols": 6,
       "videos": 3
     }

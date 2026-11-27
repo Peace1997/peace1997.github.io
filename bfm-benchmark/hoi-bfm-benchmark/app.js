@@ -1,6 +1,7 @@
 const state = {
   siteData: null,
   clipsData: null,
+  sim2realClipsData: null,
   datasetId: "clean_218",
   protocolId: "overview",  // 'overview' | 'nominal-v1' | 'sim2real-p0-v1' | ...
   ovMode: "both",          // 'both' | 'score' | 'sr'
@@ -12,6 +13,7 @@ const state = {
   selectedClip: null,
   highlightPolicy: null,
   clipFilters: {
+    proto: "nominal-v1",
     q: "",
     obj: "all",
     inter: "all",
@@ -56,14 +58,16 @@ const MOD_BADGE = {
 };
 
 async function init() {
-  const v = "20261125110322";
-  const [siteRes, clipsRes] = await Promise.all([
+  const v = "20261127121200";
+  const [siteRes, clipsRes, sim2realRes] = await Promise.all([
     fetch(`data/site_data.json?v=${v}`, { cache: "no-store" }),
     fetch(`data/clips_clean_218.json?v=${v}`, { cache: "no-store" }),
+    fetch(`data/clips_clean_218_sim2real.json?v=${v}`, { cache: "no-store" }),
   ]);
   if (!siteRes.ok || !clipsRes.ok) throw new Error("Failed to load benchmark snapshot JSON");
   state.siteData = await siteRes.json();
   state.clipsData = await clipsRes.json();
+  state.sim2realClipsData = sim2realRes.ok ? await sim2realRes.json() : null;
   state.datasetId = state.siteData.default_dataset;
   const protos = ds().protocols || [];
   state.protocolId = protos.length > 1 ? "overview" : (protos[0]?.id || "nominal-v1");
@@ -113,6 +117,8 @@ function restoreFromHash() {
   const p = new URLSearchParams(raw);
   const proto = p.get("proto");
   if (proto && (proto === "overview" || allProtocols().some((x) => x.id === proto))) state.protocolId = proto;
+  const cproto = p.get("cproto");
+  if (cproto && allProtocols().some((x) => x.id === cproto)) state.clipFilters.proto = cproto;
   if (p.get("sort") && SORT_META[p.get("sort")]) state.sortBy = p.get("sort");
   if (["all", "depth", "rgb", "proprio"].includes(p.get("mod"))) state.modality = p.get("mod");
   if (p.get("obj")) state.clipFilters.obj = p.get("obj");
@@ -127,6 +133,7 @@ function restoreFromHash() {
 function syncHash() {
   const p = new URLSearchParams();
   if (state.protocolId !== "overview") p.set("proto", state.protocolId);
+  if (state.clipFilters.proto !== "nominal-v1") p.set("cproto", state.clipFilters.proto);
   if (state.sortBy !== "total_score") p.set("sort", state.sortBy);
   if (state.modality !== "all") p.set("mod", state.modality);
   if (state.clipFilters.obj !== "all") p.set("obj", state.clipFilters.obj);
@@ -214,6 +221,7 @@ function bindEvents() {
   });
 
   const onClipFilterChange = () => {
+    state.clipFilters.proto = document.getElementById("clip-proto-filter").value;
     state.clipFilters.q = document.getElementById("clip-search").value.trim().toLowerCase();
     state.clipFilters.obj = document.getElementById("clip-object-filter").value;
     state.clipFilters.inter = document.getElementById("clip-inter-filter").value;
@@ -228,7 +236,7 @@ function bindEvents() {
   };
 
   [
-    "clip-search", "clip-object-filter", "clip-inter-filter",
+    "clip-proto-filter", "clip-search", "clip-object-filter", "clip-inter-filter",
     "clip-policy-filter", "clip-fail-filter",
     "diff-policy-a", "diff-mode", "diff-policy-b",
   ].forEach((id) => {
@@ -261,17 +269,33 @@ function setupScrollSpy() {
   sections.forEach((sec) => io.observe(sec));
 }
 
+function policyHasClipDrilldown(pid, protoId) {
+  if (protoId === "nominal-v1") return true;
+  return Boolean(state.sim2realClipsData?.policies_available?.includes(pid));
+}
+
+function getClipPolicyResult(clipObj, pid, protoId) {
+  if (!clipObj) return null;
+  if (protoId === "nominal-v1") return clipObj.results?.[pid] || null;
+  return state.sim2realClipsData?.protocols?.[protoId]?.[clipObj.clip]?.[pid] || null;
+}
+
 function resetClipFilters() {
   const pids = state.clipsData.policies;
   state.clipFilters = {
-    q: "", obj: "all", inter: "all", policy: "all", fail: "all",
+    proto: "nominal-v1", q: "", obj: "all", inter: "all", policy: "all", fail: "all",
     diffA: pids[0] || "", diffMode: "off", diffB: pids[1] || "",
   };
   state.highlightPolicy = null;
 }
 
-function drillToClips({ obj = "all", policy = "all", fail = "all", inter = "all", clip = null } = {}) {
+function drillToClips({ proto = null, obj = "all", policy = "all", fail = "all", inter = "all", clip = null } = {}) {
   resetClipFilters();
+  let targetProto = proto || activeProtoObj()?.id || "nominal-v1";
+  if (policy !== "all" && !policyHasClipDrilldown(policy, targetProto)) {
+    targetProto = "nominal-v1";
+  }
+  state.clipFilters.proto = targetProto;
   state.clipFilters.obj = obj;
   state.clipFilters.policy = policy;
   state.clipFilters.fail = fail;
@@ -535,7 +559,7 @@ function renderRanking() {
 
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
   tbl.querySelectorAll("[data-drill-p]").forEach((btn) => {
-    btn.addEventListener("click", () => drillToClips({ policy: btn.dataset.drillP, fail: "failed" }));
+    btn.addEventListener("click", () => drillToClips({ proto: po ? po.id : "nominal-v1", policy: btn.dataset.drillP, fail: "failed" }));
   });
 }
 
@@ -552,7 +576,8 @@ function renderObjectTable() {
   }
 
   const key = state.objScope === "hand" ? "by_object_hand" : "by_object";
-  const objs = Object.keys(rows[0][key] || {}).sort();
+  const fullRows = rows.filter((r) => !r.summary_only && r[key] && Object.keys(r[key]).length > 0);
+  const objs = fullRows.length ? Object.keys(fullRows[0][key]).sort() : [];
 
   if ((po && po.summary_only) || !objs.length) {
     const note = (po && po.summary_note) || "Per-object breakdown is unavailable for this archived summary protocol; switch to 1. Nominal Baseline for full 218-clip per-object drill-down.";
@@ -573,7 +598,10 @@ function renderObjectTable() {
     return;
   }
 
-  document.getElementById("per-object-sub").textContent = "Best per row is highlighted in green; click any cell to drill down into matching clips";
+  const hasSummaryOnly = rows.some((r) => r.summary_only);
+  document.getElementById("per-object-sub").textContent = hasSummaryOnly
+    ? "Best per row among JSONL-backed policies is highlighted in green; 'summary' columns are archived summary_only (strictly isolated — switch to Nominal for all 13 policies)"
+    : "Best per row is highlighted in green; click any cell to drill down into matching clips";
 
   const thead = `
     <thead>
@@ -586,16 +614,20 @@ function renderObjectTable() {
 
   const tbody = objs
     .map((obj) => {
-      const sample = rows[0][key][obj];
+      const sample = fullRows[0][key][obj];
       const vals = rows.map((r) => {
-        const d = r[key][obj];
+        if (r.summary_only) return -1;
+        const d = r[key]?.[obj];
         return d ? (state.objMetric === "sr" ? d.sr * 100 : d.total_score) : -1;
       });
       const maxVal = Math.max(...vals);
 
       const cells = rows
         .map((r, idx) => {
-          const d = r[key][obj];
+          if (r.summary_only) {
+            return `<td style="color:var(--muted);font-size:11px;" title="Archived 2026-11-24 summary_only record (switch to Nominal for per-object breakdown)">—<span class="sub-val">summary</span></td>`;
+          }
+          const d = r[key]?.[obj];
           if (!d) return `<td>—</td>`;
           const v = vals[idx];
           const isBest = v === maxVal && maxVal > 0;
@@ -612,7 +644,7 @@ function renderObjectTable() {
 
   tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
   tbl.querySelectorAll("[data-obj]").forEach((td) => {
-    td.addEventListener("click", () => drillToClips({ obj: td.dataset.obj, policy: td.dataset.pol }));
+    td.addEventListener("click", () => drillToClips({ proto: po ? po.id : "nominal-v1", obj: td.dataset.obj, policy: td.dataset.pol }));
   });
 }
 
@@ -659,7 +691,10 @@ function renderFailureTable() {
     return;
   }
 
-  document.getElementById("failure-sub").textContent = "Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect Nominal clips";
+  const hasSummaryOnly = rows.some((r) => r.summary_only);
+  document.getElementById("failure-sub").textContent = hasSummaryOnly
+    ? "Multi-label counts for 5 JSONL-backed policies (clickable); 8 archived summary_only entries show top primary failure counts only"
+    : "Multi-label counts (a single failed episode may trigger multiple reasons); click any non-zero cell to inspect matching clips";
   const cols = ["root_jitter", "drop", "contact_recall", "incomplete", "body_z", "root_ori"];
 
   const thead = `
@@ -675,6 +710,15 @@ function renderFailureTable() {
   const tbody = rows
     .map((r) => {
       const failN = r.n - r.successes;
+      if (r.summary_only) {
+        return `
+          <tr>
+            <td class="left"><button class="method-btn" data-fpol="${esc(r.policy_id)}" data-ftag="failed">${esc(pName(r.policy_id))}</button></td>
+            <td><strong>${failN}</strong> <span style="color:var(--muted);">/ ${r.n}</span></td>
+            <td colspan="6" class="left mono" style="font-size:11.5px;color:var(--muted);">Summary only (isolated) · Primary: ${esc(r.top_fails || "—")}</td>
+          </tr>
+        `;
+      }
       const fr = r.fail_reasons_multilabel || {};
       const cells = cols
         .map((c) => {
@@ -693,9 +737,15 @@ function renderFailureTable() {
     })
     .join("");
 
-  tbl.innerHTML = `${thead}<tbody>${tbody}</tbody>`;
+  const footNote = hasSummaryOnly && po?.summary_note
+    ? `<tr><td colspan="8" class="summary-only-foot">${esc(po.summary_note)} <button type="button" class="btn-subtle" style="margin-left:8px;" data-switch-nom="1">Switch to Nominal →</button></td></tr>`
+    : "";
+  tbl.innerHTML = `${thead}<tbody>${tbody}${footNote}</tbody>`;
   tbl.querySelectorAll("[data-fpol]").forEach((el) => {
-    el.addEventListener("click", () => drillToClips({ policy: el.dataset.fpol, fail: el.dataset.ftag }));
+    el.addEventListener("click", () => drillToClips({ proto: po ? po.id : "nominal-v1", policy: el.dataset.fpol, fail: el.dataset.ftag }));
+  });
+  tbl.querySelectorAll("[data-switch-nom]").forEach((btn) => {
+    btn.addEventListener("click", () => setProtocol("nominal-v1"));
   });
 }
 
@@ -703,8 +753,16 @@ function renderFailureTable() {
 function populateClipFilters() {
   const clips = state.clipsData.clips;
   const pids = state.clipsData.policies;
+  const protos = allProtocols();
   const objs = [...new Set(clips.map((c) => c.object))].sort();
   const inters = [...new Set(clips.map((c) => c.interaction_type))].sort();
+
+  document.getElementById("clip-proto-filter").innerHTML = protos
+    .map((p) => {
+      const nAvail = p.id === "nominal-v1" ? pids.length : (state.sim2realClipsData?.policies_available?.length || 0);
+      return `<option value="${esc(p.id)}">${esc(p.label)} (${nAvail} policies w/ JSONL)</option>`;
+    })
+    .join("");
 
   document.getElementById("clip-object-filter").innerHTML =
     `<option value="all">All Objects (${objs.length})</option>` +
@@ -726,6 +784,7 @@ function populateClipFilters() {
 }
 
 function syncClipControls() {
+  document.getElementById("clip-proto-filter").value = state.clipFilters.proto;
   document.getElementById("clip-search").value = state.clipFilters.q;
   document.getElementById("clip-object-filter").value = state.clipFilters.obj;
   document.getElementById("clip-inter-filter").value = state.clipFilters.inter;
@@ -748,6 +807,15 @@ function renderClipList() {
   const clips = state.clipsData.clips;
   const pids = state.clipsData.policies;
   const f = state.clipFilters;
+  const protoId = f.proto || "nominal-v1";
+  const protoObj = allProtocols().find((p) => p.id === protoId);
+  const protoShort = protoObj ? protoObj.short : "Nominal";
+  const availPids = pids.filter((pid) => policyHasClipDrilldown(pid, protoId));
+
+  document.getElementById("clips-heading").textContent = `Per-Clip Diagnostics (${protoShort} · 218 Clips)`;
+  document.getElementById("clip-proto-note").textContent = protoId === "nominal-v1"
+    ? `Full 13-policy 218-clip JSONL diagnostics`
+    : `${availPids.length} policies with verified 2026-11-24 JSONL (${protoObj?.is_stochastic ? "2-replicate DR aggregated per clip" : "deterministic"}); 8 historical policies remain summary_only`;
 
   const filtered = clips.filter((c) => {
     if (f.q && !c.clip.toLowerCase().includes(f.q) && !c.object.toLowerCase().includes(f.q)) return false;
@@ -755,14 +823,17 @@ function renderClipList() {
     if (f.inter !== "all" && c.interaction_type !== f.inter) return false;
     if (f.fail !== "all") {
       if (f.policy !== "all") {
-        if (!matchFail(c.results[f.policy], f.fail)) return false;
-      } else if (!pids.some((p) => matchFail(c.results[p], f.fail))) {
+        if (!matchFail(getClipPolicyResult(c, f.policy, protoId), f.fail)) return false;
+      } else if (!availPids.some((p) => matchFail(getClipPolicyResult(c, p, protoId), f.fail))) {
         return false;
       }
     }
     if (f.diffMode !== "off" && f.diffA && f.diffB && f.diffA !== f.diffB) {
-      const sa = c.results[f.diffA]?.success === 1;
-      const sb = c.results[f.diffB]?.success === 1;
+      const ra = getClipPolicyResult(c, f.diffA, protoId);
+      const rb = getClipPolicyResult(c, f.diffB, protoId);
+      if (!ra || !rb) return false;
+      const sa = ra.success === 1;
+      const sb = rb.success === 1;
       if (f.diffMode === "a_win_b_lose" && !(sa && !sb)) return false;
       if (f.diffMode === "a_lose_b_win" && !(!sa && sb)) return false;
       if (f.diffMode === "disagree" && sa === sb) return false;
@@ -785,8 +856,8 @@ function renderClipList() {
 
   listEl.innerHTML = filtered
     .map((c) => {
-      const succ = pids.filter((p) => c.results[p]?.success === 1).length;
-      const cls = succ === pids.length ? "tag-green" : succ === 0 ? "tag-coral" : "tag-blue";
+      const succ = availPids.filter((p) => getClipPolicyResult(c, p, protoId)?.success === 1).length;
+      const cls = succ === availPids.length ? "tag-green" : succ === 0 ? "tag-coral" : "tag-blue";
       const active = c.clip === state.selectedClip;
       return `
         <button type="button" role="option" aria-selected="${active}" class="clip-row ${active ? "active" : ""}" data-cid="${esc(c.clip)}">
@@ -794,7 +865,7 @@ function renderClipList() {
           <div class="clip-row-tags">
             <span class="tag-pill">${esc(c.object)}</span>
             <span class="tag-pill">${esc(INTER_LABELS[c.interaction_type] || c.interaction_type)}</span>
-            <span class="tag-pill ${cls}">${succ}/${pids.length} passed</span>
+            <span class="tag-pill ${cls}">${succ}/${availPids.length} passed</span>
           </div>
         </button>
       `;
@@ -823,6 +894,9 @@ function renderClipDetail(clip) {
     return;
   }
   const pids = state.clipsData.policies;
+  const protoId = state.clipFilters.proto || "nominal-v1";
+  const protoObj = allProtocols().find((p) => p.id === protoId);
+  const protoShort = protoObj ? protoObj.short : "Nominal";
   const clipVids = (ds().videos || []).filter((v) => v.clip === clip.clip);
   const matchedVid = state.highlightPolicy
     ? (clipVids.find((v) => v.policy_id === state.highlightPolicy || (Array.isArray(v.policies) && v.policies.includes(state.highlightPolicy))) || clipVids[0])
@@ -830,13 +904,29 @@ function renderClipDetail(clip) {
 
   const rowsHtml = pids
     .map((pid) => {
-      const r = clip.results[pid];
       const hl = state.highlightPolicy === pid ? "row-hl" : "";
       const hasVid = clipVids.some((v) => v.policy_id === pid || (Array.isArray(v.policies) && v.policies.includes(pid)));
+      if (!policyHasClipDrilldown(pid, protoId)) {
+        return `<tr class="${hl}"><td class="left mono" style="font-weight:600;">${esc(pName(pid))}</td><td colspan="8" class="left" style="color:var(--muted);font-size:12px;">Archived <code>summary_only: true</code> on ${esc(protoShort)} (switch protocol to Nominal for per-clip trace)</td></tr>`;
+      }
+      const r = getClipPolicyResult(clip, pid, protoId);
       if (!r) return `<tr class="${hl}"><td class="left mono">${esc(pName(pid))}</td><td colspan="8">—</td></tr>`;
-      const badge = r.success
-        ? `<span class="tag-pill tag-green">Success</span>`
-        : `<span class="tag-pill tag-coral">${esc((r.fail_reasons || []).join(", ") || r.fail_reason)}</span>`;
+      let badge;
+      if (r.pass_tag) {
+        if (r.success_count === r.n_reps) {
+          badge = `<span class="tag-pill tag-green">Success (${esc(r.pass_tag)})</span>`;
+        } else {
+          const fr = (r.fail_reasons || []).join(", ") || r.fail_reason || "fail";
+          badge = `<span class="tag-pill tag-coral">${esc(r.pass_tag)} · ${esc(fr)}</span>`;
+        }
+      } else {
+        badge = r.success
+          ? `<span class="tag-pill tag-green">Success</span>`
+          : `<span class="tag-pill tag-coral">${esc((r.fail_reasons || []).join(", ") || r.fail_reason)}</span>`;
+      }
+      const repSub = Array.isArray(r.reps)
+        ? `<span class="sub-val">${r.reps.map((rp) => `r${rp.rep}:${rp.success ? fmtNum(rp.episode_score, 1) : (rp.fail_reason || "0")}`).join(" · ")}</span>`
+        : "";
       const contact = r.contact_exempt ? "Exempt" : r.contact_recall != null ? fmtPct(r.contact_recall) : "—";
       const isWldCap = r.pos_rel_score != null && r.pos_world_score != null && r.pos_world_score < r.pos_rel_score - 0.05;
       const posSub = r.pos_rel_score != null && r.pos_world_score != null
@@ -846,7 +936,7 @@ function renderClipDetail(clip) {
         <tr class="${hl}">
           <td class="left mono" style="font-weight:600;">${esc(pName(pid))}${hasVid ? ` <span class="tag-pill tag-blue">Video</span>` : ""}</td>
           <td>${badge}</td>
-          <td><strong>${fmtNum(r.episode_score, 2)}</strong></td>
+          <td><strong>${fmtNum(r.episode_score, 2)}</strong>${repSub}</td>
           <td>${fmtNum(r.quality_score, 2)}${posSub}</td>
           <td class="mono">${r.root_jitter != null ? fmtNum(r.root_jitter, 3) : "—"}</td>
           <td class="mono">${r.obj_pos_err_mean != null ? `${fmtNum(r.obj_pos_err_mean, 3)} / ${fmtNum(r.obj_pos_err_final, 3)}` : "—"}</td>
